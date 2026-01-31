@@ -56,9 +56,6 @@ for (const dir of requiredDirs) {
   }
 }
 
-// Ensure directories exist (from storage.js)
-ensureDirectories();
-
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
