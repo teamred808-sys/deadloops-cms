@@ -1,0 +1,9 @@
+[
+  {
+    "id": "9ef55155-502e-49bb-9683-0cc5bb5c9085",
+    "email": "admin@blog.com",
+    "passwordHash": "$2b$10$rmGiNEvZ/IL17AX4agch2.l9B.wLotoYzsy5WJhhfHgLcVNzlf6zm",
+    "name": "Admin",
+    "createdAt": "2026-01-31T14:18:04.062Z"
+  }
+]

@@ -1,0 +1,252 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 240 25% 5%;
+    --foreground: 220 20% 92%;
+
+    --card: 250 30% 10%;
+    --card-foreground: 220 20% 92%;
+
+    --popover: 250 30% 10%;
+    --popover-foreground: 220 20% 92%;
+
+    --primary: 265 80% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 250 25% 18%;
+    --secondary-foreground: 220 20% 92%;
+
+    --muted: 250 25% 18%;
+    --muted-foreground: 220 15% 60%;
+
+    --accent: 220 90% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 260 30% 20%;
+    --input: 260 30% 20%;
+    --ring: 265 80% 60%;
+    
+    --sidebar-background: 250 30% 8%;
+    --sidebar-foreground: 220 20% 92%;
+    --sidebar-primary: 265 80% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 250 25% 18%;
+    --sidebar-accent-foreground: 220 20% 92%;
+    --sidebar-border: 260 30% 20%;
+    --sidebar-ring: 265 80% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    text-rendering: optimizeSpeed;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+}
+
+/* Prose styles for blog content */
+.prose {
+  @apply leading-relaxed;
+}
+
+.prose h1, .prose h2, .prose h3 {
+  @apply font-bold mt-8 mb-4;
+}
+
+.prose h1 { @apply text-3xl; }
+.prose h2 { @apply text-2xl; }
+.prose h3 { @apply text-xl; }
+
+.prose p {
+  @apply mb-4;
+}
+
+.prose ul, .prose ol {
+  @apply mb-4 pl-6;
+}
+
+.prose ul { @apply list-disc; }
+.prose ol { @apply list-decimal; }
+
+.prose li {
+  @apply mb-2;
+}
+
+.prose pre {
+  @apply bg-muted p-4 rounded-lg overflow-x-auto mb-4;
+}
+
+.prose code {
+  @apply bg-muted px-1.5 py-0.5 rounded text-sm;
+}
+
+.prose pre code {
+  @apply bg-transparent p-0;
+}
+
+.prose blockquote {
+  @apply border-l-4 border-primary pl-4 italic my-4;
+}
+
+.prose a {
+  @apply text-primary underline;
+}
+
+.prose img {
+  @apply rounded-lg my-4 max-w-full;
+}
+
+/* Dark Gradient Theme */
+.gradient-bg {
+  background: linear-gradient(
+    135deg,
+    hsl(240 25% 5%) 0%,
+    hsl(260 30% 8%) 50%,
+    hsl(250 35% 6%) 100%
+  );
+  min-height: 100vh;
+}
+
+.gradient-card {
+  background: linear-gradient(
+    145deg,
+    hsl(250 30% 12% / 0.9) 0%,
+    hsl(260 25% 8% / 0.8) 100%
+  );
+  backdrop-filter: blur(10px);
+}
+
+.gradient-header {
+  background: linear-gradient(
+    180deg,
+    hsl(250 30% 10% / 0.95) 0%,
+    hsl(250 30% 8% / 0.9) 100%
+  );
+  backdrop-filter: blur(12px);
+}
+
+.glow-primary {
+  box-shadow: 0 0 20px hsl(265 80% 60% / 0.3);
+}
+
+.glow-accent {
+  box-shadow: 0 0 15px hsl(220 90% 55% / 0.25);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, hsl(265 80% 65%) 0%, hsl(220 90% 60%) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Performance utilities */
+.will-change-transform {
+  will-change: transform;
+}
+
+.contain-layout {
+  contain: layout;
+}
+
+.contain-paint {
+  contain: paint;
+}
+
+.content-visibility-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 400px;
+}
+
+/* Reduce expensive effects on mobile */
+@media (max-width: 768px) {
+  .glow-primary {
+    box-shadow: none;
+  }
+  
+  .gradient-card {
+    backdrop-filter: none;
+  }
+  
+  .gradient-header {
+    backdrop-filter: blur(4px);
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

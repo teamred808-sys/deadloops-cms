@@ -1,0 +1,16 @@
+{
+  "siteTitle": "Deadloops",
+  "tagline": "Music Production Resources & Tutorials",
+  "logo": null,
+  "postsPerPage": 12,
+  "downloadTimerDuration": 15,
+  "adBlockerDetectionEnabled": false,
+  "adBlockerMessage": "Please disable your ad blocker to access downloads.",
+  "googleAdsEnabled": false,
+  "googleAdsClientId": "",
+  "googleAdsDisplaySlotId": "",
+  "googleAdsInFeedSlotId": "",
+  "googleAdsInArticleSlotId": "",
+  "googleAdsMultiplexSlotId": "",
+  "googleAdsCode": ""
+}

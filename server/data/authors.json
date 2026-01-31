@@ -1,0 +1,23 @@
+[
+  {
+    "id": "2080bec9-833f-4c33-ba06-b3c99576e82b",
+    "name": "Admin",
+    "slug": "admin",
+    "bio": "",
+    "credentials": "Site Administrator",
+    "image": null,
+    "socialLinks": {
+      "twitter": null,
+      "linkedin": null,
+      "github": null,
+      "website": null,
+      "youtube": null,
+      "instagram": null
+    },
+    "expertise": [],
+    "isActive": true,
+    "isDefault": true,
+    "createdAt": "2026-01-31T14:16:56.943Z",
+    "updatedAt": "2026-01-31T14:16:56.943Z"
+  }
+]
