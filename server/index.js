@@ -243,7 +243,7 @@ app.get('/api/posts', async (req, res) => {
     const [posts] = await pool.query(`
       SELECT 
         id, title, slug, content, excerpt, status, author_id as authorId, 
-        download_count as downloadCount, image, publish_date as publishDate, 
+        download_count as downloadCount, image as featuredImage, publish_date as publishDate, 
         categories, tags, meta_title as metaTitle, meta_description as metaDescription, 
         created_at as createdAt, updated_at as updatedAt 
       FROM posts
@@ -259,7 +259,7 @@ app.get('/api/posts/published', async (req, res) => {
     const [posts] = await pool.query(`
       SELECT 
         id, title, slug, content, excerpt, status, author_id as authorId, 
-        download_count as downloadCount, image, publish_date as publishDate, 
+        download_count as downloadCount, image as featuredImage, publish_date as publishDate, 
         categories, tags, meta_title as metaTitle, meta_description as metaDescription, 
         created_at as createdAt, updated_at as updatedAt 
       FROM posts 
@@ -277,7 +277,7 @@ app.get('/api/posts/:id', async (req, res) => {
     const [posts] = await pool.query(`
       SELECT 
         id, title, slug, content, excerpt, status, author_id as authorId, 
-        download_count as downloadCount, image, publish_date as publishDate, 
+        download_count as downloadCount, image as featuredImage, publish_date as publishDate, 
         categories, tags, meta_title as metaTitle, meta_description as metaDescription, 
         created_at as createdAt, updated_at as updatedAt 
       FROM posts 
@@ -298,7 +298,42 @@ app.get('/api/posts/slug/:slug', async (req, res) => {
     const [posts] = await pool.query(`
       SELECT 
         id, title, slug, content, excerpt, status, author_id as authorId, 
-        download_count as downloadCount, image, publish_date as publishDate, 
+        download_count as downloadCount, image as featuredImage, publish_date as publishDate, 
+        categories, tags, meta_title as metaTitle, meta_description as metaDescription, 
+        created_at as createdAt, updated_at as updatedAt 
+      FROM posts 
+      WHERE slug = ?
+    `, [req.params.slug]);
+
+    if (posts.length === 0) {
+      // Try finding by ID if slug fails (fallback)
+      const [byID] = await pool.query(`
+        SELECT 
+          id, title, slug, content, excerpt, status, author_id as authorId, 
+          download_count as downloadCount, image as featuredImage, publish_date as publishDate, 
+          categories, tags, meta_title as metaTitle, meta_description as metaDescription, 
+          created_at as createdAt, updated_at as updatedAt 
+        FROM posts 
+        WHERE id = ?
+      `, [req.params.slug]);
+
+      if (byID.length > 0) return res.json(byID[0]);
+
+      return res.status(404).json({ error: 'Post not found' });
+    }
+    res.json(posts[0]);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch post by slug' });
+  }
+});
+
+// Helper for generic public slug lookup (could be post, or eventually page)
+app.get('/api/public/posts/:slug', async (req, res) => {
+  try {
+    const [posts] = await pool.query(`
+      SELECT 
+        id, title, slug, content, excerpt, status, author_id as authorId, 
+        download_count as downloadCount, image as featuredImage, publish_date as publishDate, 
         categories, tags, meta_title as metaTitle, meta_description as metaDescription, 
         created_at as createdAt, updated_at as updatedAt 
       FROM posts 
@@ -310,14 +345,18 @@ app.get('/api/posts/slug/:slug', async (req, res) => {
     }
     res.json(posts[0]);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch post' });
+    res.status(500).json({ error: 'Failed to fetch published post by slug' });
   }
 });
 
 app.post('/api/posts', authenticateToken, async (req, res) => {
   try {
+    // Map featuredImage (frontend) to image (db)
+    const image = req.body.featuredImage || req.body.image;
+
     const newPost = {
       ...req.body,
+      image, // Ensure image is set for logic usage
       id: generateId(),
       slug: req.body.slug || generateSlug(req.body.title),
       downloadCount: 0,
@@ -331,12 +370,13 @@ app.post('/api/posts', authenticateToken, async (req, res) => {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         newPost.id, newPost.title, newPost.slug, newPost.content, newPost.excerpt, newPost.status, newPost.authorId,
-        newPost.downloadCount, newPost.image, newPost.publishDate, JSON.stringify(newPost.categories || []), JSON.stringify(newPost.tags || []),
+        newPost.downloadCount, image, newPost.publishDate, JSON.stringify(newPost.categories || []), JSON.stringify(newPost.tags || []),
         newPost.metaTitle, newPost.metaDescription, newPost.createdAt, newPost.updatedAt
       ]
     );
 
-    res.status(201).json(newPost);
+    // Return with featuredImage for frontend compatibility
+    res.status(201).json({ ...newPost, featuredImage: image });
   } catch (error) {
     console.error('Create post error:', error);
     res.status(500).json({ error: 'Failed to create post' });
@@ -370,7 +410,9 @@ app.put('/api/posts/:id', authenticateToken, async (req, res) => {
     const excerpt = p.excerpt !== undefined ? p.excerpt : current.excerpt;
     const status = p.status !== undefined ? p.status : current.status;
     const authorId = p.authorId !== undefined ? p.authorId : current.author_id;
-    const image = p.image !== undefined ? p.image : current.image;
+    // Handle both featuredImage (frontend) and image (db/legacy)
+    const newImage = p.featuredImage !== undefined ? p.featuredImage : (p.image !== undefined ? p.image : current.image);
+
     const publishDate = p.publishDate !== undefined ? p.publishDate : current.publish_date;
     const categories = p.categories !== undefined ? JSON.stringify(p.categories) : (typeof current.categories === 'string' ? current.categories : JSON.stringify(current.categories));
     const tags = p.tags !== undefined ? JSON.stringify(p.tags) : (typeof current.tags === 'string' ? current.tags : JSON.stringify(current.tags));
@@ -382,13 +424,16 @@ app.put('/api/posts/:id', authenticateToken, async (req, res) => {
       title = ?, slug = ?, content = ?, excerpt = ?, status = ?, author_id = ?, image = ?, 
       publish_date = ?, categories = ?, tags = ?, meta_title = ?, meta_description = ?, updated_at = ? 
       WHERE id = ?`,
-      [title, slug, content, excerpt, status, authorId, image, publishDate, categories, tags, metaTitle, metaDescription, updatedAt, req.params.id]
+      [title, slug, content, excerpt, status, authorId, newImage, publishDate, categories, tags, metaTitle, metaDescription, updatedAt, req.params.id]
     );
 
     // Return the updated object (mapped back to camelCase)
     res.json({
       id: req.params.id,
-      title, slug, content, excerpt, status, authorId, image, publishDate,
+      title, slug, content, excerpt, status, authorId,
+      featuredImage: newImage, // Return as featuredImage
+      image: newImage,
+      publishDate,
       categories: p.categories || current.categories,
       tags: p.tags || current.tags,
       metaTitle, metaDescription,
@@ -449,6 +494,7 @@ app.post('/api/posts/:id/duplicate', authenticateToken, async (req, res) => {
       excerpt: post.excerpt,
       authorId: post.author_id,
       image: post.image,
+      featuredImage: post.image, // Ensure mapped for frontend
       categories: post.categories,
       tags: post.tags,
       metaTitle: post.meta_title,
