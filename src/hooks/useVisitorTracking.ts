@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 
 const SESSION_KEY = 'visitor_session_id';
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 function getOrCreateSessionId(): string {
   let id = sessionStorage.getItem(SESSION_KEY);
@@ -50,7 +50,7 @@ export function useVisitorTracking(): void {
 
   useEffect(() => {
     const currentPath = location.pathname;
-    
+
     // Avoid duplicate pings for same path
     if (lastPath.current === currentPath) return;
     lastPath.current = currentPath;
