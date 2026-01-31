@@ -15,11 +15,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  getPost, 
-  createPost, 
-  updatePost, 
-  getCategories, 
+import {
+  getPost,
+  createPost,
+  updatePost,
+  getCategories,
   getTags,
   createCategory,
   getAuthors,
@@ -29,14 +29,15 @@ import TipTapEditor from '@/components/admin/TipTapEditor';
 import { Post, Category, Tag, PostFormData } from '@/types/blog';
 import { Author } from '@/types/seo';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  ArrowLeft, 
-  Save, 
-  X, 
+import {
+  ArrowLeft,
+  Save,
+  X,
   Plus,
   Loader2,
   Image as ImageIcon,
 } from 'lucide-react';
+import { getUploadUrl } from '@/lib/apiClient';
 
 export default function PostEditorPage() {
   const { id } = useParams();
@@ -141,7 +142,7 @@ export default function PostEditorPage() {
   const handleCategoryToggle = (categoryId: string, checked: boolean) => {
     setFormData(prev => ({
       ...prev,
-      categories: checked 
+      categories: checked
         ? [...prev.categories, categoryId]
         : prev.categories.filter(id => id !== categoryId),
     }));
@@ -149,8 +150,8 @@ export default function PostEditorPage() {
 
   const handleAddCategory = async () => {
     if (!newCategory.trim()) return;
-    const category = await createCategory({ 
-      name: newCategory, 
+    const category = await createCategory({
+      name: newCategory,
       slug: generateSlug(newCategory),
       description: '',
     });
@@ -163,7 +164,7 @@ export default function PostEditorPage() {
     toast({ title: 'Category created', description: `"${newCategory}" has been added.` });
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -172,11 +173,28 @@ export default function PostEditorPage() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setFormData(prev => ({ ...prev, featuredImage: reader.result as string }));
-    };
-    reader.readAsDataURL(file);
+    try {
+      // Get dimensions for metadata
+      const img = new window.Image();
+      const objectUrl = URL.createObjectURL(file);
+
+      img.onload = async () => {
+        try {
+          // Use addMedia to upload to server
+          const media = await import('@/lib/api').then(m => m.addMedia(file, img.width, img.height));
+          setFormData(prev => ({ ...prev, featuredImage: media.url }));
+          toast({ title: 'Image uploaded', description: 'Featured image set successfully.' });
+        } catch (error) {
+          console.error(error);
+          toast({ title: 'Error', description: 'Failed to upload image', variant: 'destructive' });
+        } finally {
+          URL.revokeObjectURL(objectUrl);
+        }
+      };
+      img.src = objectUrl;
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to process image', variant: 'destructive' });
+    }
   };
 
   const handleSave = async (status: 'draft' | 'published') => {
@@ -258,8 +276,8 @@ export default function PostEditorPage() {
           />
 
           {/* Editor */}
-          <TipTapEditor 
-            content={formData.content} 
+          <TipTapEditor
+            content={formData.content}
             onChange={handleContentChange}
           />
 
@@ -289,8 +307,8 @@ export default function PostEditorPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Status</Label>
-                <Select 
-                  value={formData.status} 
+                <Select
+                  value={formData.status}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as 'draft' | 'published' }))}
                 >
                   <SelectTrigger>
@@ -321,9 +339,9 @@ export default function PostEditorPage() {
             <CardContent>
               <Select
                 value={formData.authorId || defaultAuthorId || ''}
-                onValueChange={(value) => setFormData(prev => ({ 
-                  ...prev, 
-                  authorId: value 
+                onValueChange={(value) => setFormData(prev => ({
+                  ...prev,
+                  authorId: value
                 }))}
               >
                 <SelectTrigger>
@@ -348,9 +366,9 @@ export default function PostEditorPage() {
             <CardContent>
               {formData.featuredImage ? (
                 <div className="relative">
-                  <img 
-                    src={formData.featuredImage} 
-                    alt="Featured" 
+                  <img
+                    src={getUploadUrl(formData.featuredImage)}
+                    alt="Featured"
                     className="w-full aspect-video object-cover rounded-lg"
                   />
                   <Button
@@ -422,8 +440,8 @@ export default function PostEditorPage() {
               <Input
                 placeholder="Enter tags, separated by commas"
                 value={formData.tags.join(', ')}
-                onChange={(e) => setFormData(prev => ({ 
-                  ...prev, 
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
                   tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean)
                 }))}
               />

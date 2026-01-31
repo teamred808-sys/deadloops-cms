@@ -17,11 +17,11 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  getSettings, 
-  updateSettings, 
-  exportAllData, 
-  importAllData, 
+import {
+  getSettings,
+  updateSettings,
+  exportAllData,
+  importAllData,
   clearAllData,
   changePassword,
   changeEmail,
@@ -29,17 +29,18 @@ import {
 } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { Settings } from '@/types/blog';
-import { 
-  Save, 
-  Download, 
-  Upload, 
-  Trash2, 
+import {
+  Save,
+  Download,
+  Upload,
+  Trash2,
   Image as ImageIcon,
   X,
   Loader2,
   Database,
   Shield,
 } from 'lucide-react';
+import { getUploadUrl } from '@/lib/apiClient';
 
 const defaultSettings: Settings = {
   siteTitle: 'Deadloops',
@@ -61,13 +62,13 @@ const defaultSettings: Settings = {
 export default function SettingsPage() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [storageUsage, setStorageUsage] = useState({ used: 0, limit: 10240, percentage: 0 });
-  
+
   // Password change
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -101,7 +102,7 @@ export default function SettingsPage() {
     }
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -110,11 +111,26 @@ export default function SettingsPage() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setSettings(prev => ({ ...prev, logo: reader.result as string }));
-    };
-    reader.readAsDataURL(file);
+    try {
+      const img = new window.Image();
+      const objectUrl = URL.createObjectURL(file);
+
+      img.onload = async () => {
+        try {
+          const media = await import('@/lib/api').then(m => m.addMedia(file, img.width, img.height));
+          setSettings(prev => ({ ...prev, logo: media.url }));
+          toast({ title: 'Logo uploaded', description: 'Site logo updated.' });
+        } catch (error) {
+          console.error(error);
+          toast({ title: 'Error', description: 'Failed to upload logo', variant: 'destructive' });
+        } finally {
+          URL.revokeObjectURL(objectUrl);
+        }
+      };
+      img.src = objectUrl;
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to process image', variant: 'destructive' });
+    }
   };
 
   const handleExport = async () => {
@@ -189,7 +205,7 @@ export default function SettingsPage() {
     } catch (error) {
       toast({ title: 'Error', description: 'Failed to change password', variant: 'destructive' });
     } finally {
-    setIsChangingPassword(false);
+      setIsChangingPassword(false);
     }
   };
 
@@ -278,7 +294,7 @@ export default function SettingsPage() {
                 <Label>Logo</Label>
                 {settings.logo ? (
                   <div className="relative inline-block">
-                    <img src={settings.logo} alt="Logo" className="h-16 object-contain" />
+                    <img src={getUploadUrl(settings.logo)} alt="Logo" className="h-16 object-contain" />
                     <Button
                       variant="destructive"
                       size="icon"
@@ -494,8 +510,8 @@ export default function SettingsPage() {
                   <span>{storageUsage.limit} MB total</span>
                 </div>
                 <div className="w-full bg-muted rounded-full h-2">
-                  <div 
-                    className="bg-primary h-2 rounded-full transition-all" 
+                  <div
+                    className="bg-primary h-2 rounded-full transition-all"
                     style={{ width: `${Math.min(storageUsage.percentage, 100)}%` }}
                   />
                 </div>
