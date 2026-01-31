@@ -130,10 +130,6 @@ async function migrate() {
     }
 }
 
-process.exit(1);
-  }
-}
-
 module.exports = { migrate };
 
 if (require.main === module) {
