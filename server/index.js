@@ -979,9 +979,6 @@ async function start() {
       console.log(`✅ Server listening on 0.0.0.0:${PORT}`);
       console.log(`📁 Data directory: ${path.resolve(__dirname, 'data')}`);
       console.log(`📸 Uploads directory: ${getUploadsPath()}`);
-      if (fs.existsSync(frontendPath)) {
-        console.log(`🌐 Frontend: ${frontendPath}`);
-      }
     });
   } catch (error) {
     console.error('❌ Server failed to start:', error);
