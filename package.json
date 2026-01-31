@@ -1,6 +1,7 @@
 {
   "name": "vite_react_shadcn_ts",
   "private": true,
+  "main": "index.js",
   "version": "0.0.0",
   "scripts": {
     "start": "node server/index.js",
