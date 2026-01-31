@@ -39,13 +39,13 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { getPosts, getCategories, deletePost, deletePosts, duplicatePost } from '@/lib/api';
 import { formatDate } from '@/lib/storage';
-import { 
-  Plus, 
-  Search, 
-  MoreHorizontal, 
-  Edit, 
-  Trash2, 
-  Eye, 
+import {
+  Plus,
+  Search,
+  MoreHorizontal,
+  Edit,
+  Trash2,
+  Eye,
   Copy,
   FileText,
   Loader2,
@@ -55,7 +55,7 @@ import { Post, Category } from '@/types/blog';
 export default function PostsPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [posts, setPosts] = useState<Post[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,12 +83,13 @@ export default function PostsPage() {
     return posts.filter(post => {
       const matchesSearch = post.title.toLowerCase().includes(search.toLowerCase());
       const matchesStatus = statusFilter === 'all' || post.status === statusFilter;
-      const matchesCategory = categoryFilter === 'all' || post.categories.includes(categoryFilter);
+      const matchesCategory = categoryFilter === 'all' || (post.categories || []).includes(categoryFilter);
       return matchesSearch && matchesStatus && matchesCategory;
     }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [posts, search, statusFilter, categoryFilter]);
 
-  const getCategoryNames = (categoryIds: string[]) => {
+  const getCategoryNames = (categoryIds: string[] = []) => {
+    if (!Array.isArray(categoryIds)) return '';
     return categoryIds
       .map(id => categories.find(cat => cat.id === id)?.name)
       .filter(Boolean)
@@ -100,7 +101,7 @@ export default function PostsPage() {
   };
 
   const handleSelectPost = (postId: string, checked: boolean) => {
-    setSelectedPosts(prev => 
+    setSelectedPosts(prev =>
       checked ? [...prev, postId] : prev.filter(id => id !== postId)
     );
   };
@@ -125,9 +126,9 @@ export default function PostsPage() {
     const count = await deletePosts(selectedPosts);
     await refreshPosts();
     setSelectedPosts([]);
-    toast({ 
-      title: 'Posts deleted', 
-      description: `${count} post(s) have been deleted successfully.` 
+    toast({
+      title: 'Posts deleted',
+      description: `${count} post(s) have been deleted successfully.`
     });
   };
 
@@ -253,9 +254,9 @@ export default function PostsPage() {
                       <TableCell>
                         <div className="flex items-center gap-3">
                           {post.featuredImage && (
-                            <img 
-                              src={post.featuredImage} 
-                              alt="" 
+                            <img
+                              src={post.featuredImage}
+                              alt=""
                               className="h-10 w-14 rounded object-cover hidden sm:block"
                             />
                           )}
@@ -272,7 +273,7 @@ export default function PostsPage() {
                       <TableCell className="hidden md:table-cell">{post.author}</TableCell>
                       <TableCell className="hidden lg:table-cell">
                         <span className="text-sm text-muted-foreground truncate max-w-[150px] block">
-                          {getCategoryNames(post.categories) || '-'}
+                          {getCategoryNames(post.categories || []) || '-'}
                         </span>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell text-muted-foreground">
@@ -304,7 +305,7 @@ export default function PostsPage() {
                             <DropdownMenuItem onClick={() => handleDuplicate(post.id)}>
                               <Copy className="mr-2 h-4 w-4" /> Duplicate
                             </DropdownMenuItem>
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               className="text-destructive focus:text-destructive"
                               onClick={() => handleDelete(post.id)}
                             >
