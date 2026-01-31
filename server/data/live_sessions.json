@@ -1,8 +1,68 @@
 [
   {
-    "session_id": "sess_7cdd0e4c-e57d-4949-a224-9442c7a50acf",
-    "last_active_at": "2026-01-31T16:24:10.060Z",
+    "session_id": "sess_32c04c66-ddee-49f3-b312-5adbe02887b6",
+    "last_active_at": "2026-01-31T19:11:05.659Z",
     "current_page": "/",
+    "device_type": "desktop"
+  },
+  {
+    "session_id": "sess_c3db3d52-021d-49f1-87a4-88365f25b733",
+    "last_active_at": "2026-01-31T19:11:25.192Z",
+    "current_page": "/superuser",
+    "device_type": "desktop"
+  },
+  {
+    "session_id": "sess_f5a7bdb8-7972-4cd7-a15f-c9e48411356e",
+    "last_active_at": "2026-01-31T19:12:55.346Z",
+    "current_page": "/register",
+    "device_type": "desktop"
+  },
+  {
+    "session_id": "sess_35a18ba5-9562-4e9c-b28d-9b740efb59d0",
+    "last_active_at": "2026-01-31T19:12:58.812Z",
+    "current_page": "/login",
+    "device_type": "desktop"
+  },
+  {
+    "session_id": "sess_5d7e79df-e4b0-48d3-bf50-e3a89d0ec493",
+    "last_active_at": "2026-01-31T19:13:16.773Z",
+    "current_page": "/blog",
+    "device_type": "desktop"
+  },
+  {
+    "session_id": "sess_e8dc74d3-90a0-4661-b6ba-ebb982e6d3d5",
+    "last_active_at": "2026-01-31T19:13:20.759Z",
+    "current_page": "/posts",
+    "device_type": "desktop"
+  },
+  {
+    "session_id": "sess_7e293d05-31eb-4b0f-b43b-31b5ec9814fa",
+    "last_active_at": "2026-01-31T19:13:31.936Z",
+    "current_page": "/post/1",
+    "device_type": "desktop"
+  },
+  {
+    "session_id": "sess_e64a25fb-9798-4538-9c86-f9e8ad2e2925",
+    "last_active_at": "2026-01-31T19:13:39.612Z",
+    "current_page": "/",
+    "device_type": "desktop"
+  },
+  {
+    "session_id": "sess_2d33b52f-771a-4f03-9dca-dbc3ba27afbe",
+    "last_active_at": "2026-01-31T19:14:33.617Z",
+    "current_page": "/superuser",
+    "device_type": "desktop"
+  },
+  {
+    "session_id": "sess_43837359-931f-4336-bc65-26716ca23c44",
+    "last_active_at": "2026-01-31T19:17:04.705Z",
+    "current_page": "/admin/posts",
+    "device_type": "desktop"
+  },
+  {
+    "session_id": "sess_0320d90c-f7a5-40b0-a041-8d9f522eb416",
+    "last_active_at": "2026-01-31T19:17:48.231Z",
+    "current_page": "/blog/f",
     "device_type": "desktop"
   }
 ]

@@ -1,0 +1,26 @@
+[
+  {
+    "title": "First Test Post",
+    "content": "<p>This is a test content verified by the agent.</p>",
+    "excerpt": "This is a test content verified by the agent.",
+    "featuredImage": null,
+    "status": "published",
+    "publishDate": "2026-01-31T13:45:00.000Z",
+    "categories": [
+      "0b63cfb7-0705-4c99-afc7-4d48bbf69964"
+    ],
+    "tags": [],
+    "downloadEnabled": false,
+    "downloadUrl": null,
+    "downloadFilename": null,
+    "downloadSize": null,
+    "metaDescription": "",
+    "slug": "f",
+    "authorId": "2080bec9-833f-4c33-ba06-b3c99576e82b",
+    "author": "Admin",
+    "id": "58a28bc2-b278-49f6-931f-11e3787e8c08",
+    "downloadCount": 0,
+    "createdAt": "2026-01-31T19:16:54.058Z",
+    "updatedAt": "2026-01-31T19:16:54.058Z"
+  }
+]
