@@ -942,23 +942,20 @@ app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => 
   });
 });
 
-// ============= HARDENED STATIC FRONTEND SERVING =============
+// ============= UNIFIED FRONTEND SERVING (SPA) =============
 const frontendPath = path.join(__dirname, '..', 'dist');
 
-// 1. Serve static files FIRST
+// 1. Serve static assets (JS, CSS, Images)
 app.use(express.static(frontendPath));
 
-// 404 handler for unknown API routes (Must be before SPA fallback)
+// 2. API 404 Handler (Must be before SPA fallback)
 app.use('/api/*', (req, res) => {
   res.status(404).json({ error: 'API endpoint not found' });
 });
 
-// 2. SPA fallback — ONLY for non-file routes
+// 3. SPA Fallback - Handles root "/" and all other routes
+// This MUST be the last route. No conditionals.
 app.get('*', (req, res) => {
-  if (req.path.includes('.')) {
-    // Prevent serving index.html for asset requests
-    return res.status(404).end();
-  }
   res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
