@@ -1,16 +1,13 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
 
 // Data directory paths - use path.resolve for Hostinger reliability
 const DATA_DIR = path.resolve(__dirname, 'data');
 const UPLOADS_DIR = path.resolve(__dirname, 'uploads');
 
 // Ensure directories exist
-export function ensureDirectories() {
+function ensureDirectories() {
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
   }
@@ -20,7 +17,7 @@ export function ensureDirectories() {
 }
 
 // Read JSON file
-export function readJsonFile(filename, defaultValue) {
+function readJsonFile(filename, defaultValue) {
   const filepath = path.join(DATA_DIR, filename);
   try {
     if (fs.existsSync(filepath)) {
@@ -35,7 +32,7 @@ export function readJsonFile(filename, defaultValue) {
 }
 
 // Write JSON file
-export function writeJsonFile(filename, data) {
+function writeJsonFile(filename, data) {
   const filepath = path.join(DATA_DIR, filename);
   try {
     fs.writeFileSync(filepath, JSON.stringify(data, null, 2), 'utf-8');
@@ -46,9 +43,9 @@ export function writeJsonFile(filename, data) {
 }
 
 // Get storage usage (in bytes)
-export function getStorageUsage() {
+function getStorageUsage() {
   let totalSize = 0;
-  
+
   // Calculate data directory size
   if (fs.existsSync(DATA_DIR)) {
     const files = fs.readdirSync(DATA_DIR);
@@ -58,7 +55,7 @@ export function getStorageUsage() {
       totalSize += stats.size;
     }
   }
-  
+
   // Calculate uploads directory size
   if (fs.existsSync(UPLOADS_DIR)) {
     const calculateDirSize = (dir) => {
@@ -77,10 +74,10 @@ export function getStorageUsage() {
     };
     totalSize += calculateDirSize(UPLOADS_DIR);
   }
-  
+
   const usedMB = totalSize / (1024 * 1024);
   const limitMB = 10240; // 10GB limit
-  
+
   return {
     used: usedMB,
     limit: limitMB,
@@ -89,17 +86,17 @@ export function getStorageUsage() {
 }
 
 // Get data directory path
-export function getDataPath() {
+function getDataPath() {
   return DATA_DIR;
 }
 
 // Get uploads directory path
-export function getUploadsPath() {
+function getUploadsPath() {
   return UPLOADS_DIR;
 }
 
 // Delete file from uploads
-export function deleteUploadedFile(filename) {
+function deleteUploadedFile(filename) {
   const filepath = path.join(UPLOADS_DIR, filename);
   try {
     if (fs.existsSync(filepath)) {
@@ -114,12 +111,12 @@ export function deleteUploadedFile(filename) {
 }
 
 // Generate unique ID
-export function generateId() {
+function generateId() {
   return crypto.randomUUID();
 }
 
 // Generate slug from title
-export function generateSlug(title) {
+function generateSlug(title) {
   return title
     .toLowerCase()
     .trim()
@@ -127,3 +124,15 @@ export function generateSlug(title) {
     .replace(/[\s_-]+/g, '-')
     .replace(/^-+|-+$/g, '');
 }
+
+module.exports = {
+  ensureDirectories,
+  readJsonFile,
+  writeJsonFile,
+  getStorageUsage,
+  getDataPath,
+  getUploadsPath,
+  deleteUploadedFile,
+  generateId,
+  generateSlug
+};

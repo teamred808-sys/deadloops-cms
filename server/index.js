@@ -1,13 +1,12 @@
-import express from 'express';
-import cors from 'cors';
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { v4 as uuidv4 } from 'uuid';
-import {
+const express = require('express');
+const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid');
+const {
   ensureDirectories,
   readJsonFile,
   writeJsonFile,
@@ -16,10 +15,7 @@ import {
   deleteUploadedFile,
   generateId,
   generateSlug,
-} from './storage.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+} = require('./storage.js');
 
 // ============= GLOBAL ERROR HANDLERS FOR HOSTINGER STABILITY =============
 process.on('uncaughtException', (error) => {
@@ -979,7 +975,7 @@ async function start() {
     initializeSettings();
     initializeDefaultAuthor();
 
-    app.listen(PORT, '0.0.0.0', () => {
+    app.listen(PORT, () => {
       console.log(`✅ Server listening on 0.0.0.0:${PORT}`);
       console.log(`📁 Data directory: ${path.resolve(__dirname, 'data')}`);
       console.log(`📸 Uploads directory: ${getUploadsPath()}`);
@@ -992,12 +988,5 @@ async function start() {
     process.exit(1);
   }
 }
-
-// Add global error handling for promises that might fail during import/init
-process.on('uncaughtException', (err) => {
-  console.error('CRITICAL ERROR: Uncaught Exception:', err);
-  // Keep the process alive long enough to flush logs if possible, but we must exit
-  process.exit(1);
-});
 
 start();
