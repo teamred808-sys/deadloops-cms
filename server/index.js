@@ -1304,10 +1304,69 @@ app.use('/api/*', (req, res) => {
   res.status(404).json({ error: 'API endpoint not found' });
 });
 
-// 3. SPA Fallback - Handles root "/" and all other routes
-// This MUST be the last route. No conditionals.
+// Helper to replace placeholders
+const replaceMetaTags = (html, metadata) => {
+  return html
+    .replace(/__OG_TITLE__/g, metadata.title || 'Deadloops - Music Production Resources & Tutorials')
+    .replace(/__OG_DESCRIPTION__/g, metadata.description || 'Music production resources, tutorials, and free downloads for producers and beatmakers.')
+    .replace(/__OG_IMAGE__/g, metadata.image || 'https://deadloops.com/logo.webp')
+    .replace(/__OG_URL__/g, metadata.url || 'https://deadloops.com');
+};
+
+// 3. Dynamic OG Tags for Blog Posts
+app.get('/blog/:slug', async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const [posts] = await pool.promise().query(
+      'SELECT title, excerpt, image FROM posts WHERE slug = ? AND status = "published"',
+      [slug]
+    );
+
+    const filePath = path.join(frontendPath, 'index.html');
+
+    // Check if file exists to avoid crashes
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).send('Index file not found');
+    }
+
+    let html = fs.readFileSync(filePath, 'utf8');
+
+    if (posts.length > 0) {
+      const post = posts[0];
+      const imageUrl = post.image ? (post.image.startsWith('http') ? post.image : `https://deadloops.com${post.image}`) : 'https://deadloops.com/logo.webp';
+
+      html = replaceMetaTags(html, {
+        title: post.title,
+        description: post.excerpt,
+        image: imageUrl,
+        url: `https://deadloops.com/blog/${slug}`
+      });
+    } else {
+      // Post not found, use defaults
+      html = replaceMetaTags(html, {});
+    }
+
+    res.send(html);
+  } catch (error) {
+    console.error('Error serving blog post with OG tags:', error);
+    // Fallback to static file if DB fails
+    res.sendFile(path.join(frontendPath, 'index.html'));
+  }
+});
+
+// 4. SPA Fallback - Handles all other routes
+// Replaces placeholders with default values
 app.get('*', (req, res) => {
-  res.sendFile(path.join(frontendPath, 'index.html'));
+  const filePath = path.join(frontendPath, 'index.html');
+
+  if (fs.existsSync(filePath)) {
+    let html = fs.readFileSync(filePath, 'utf8');
+    // Inject defaults for all non-blog pages
+    html = replaceMetaTags(html, {});
+    res.send(html);
+  } else {
+    res.status(404).send('Site under maintenance');
+  }
 });
 
 // Initialize and start server with error handling
