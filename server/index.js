@@ -1372,7 +1372,8 @@ const replaceMetaTags = (html, metadata) => {
 app.get('/blog/:slug', async (req, res) => {
   try {
     const { slug } = req.params;
-    const [posts] = await pool.promise().query(
+    // pool is already a promise pool from db.js
+    const [posts] = await pool.query(
       'SELECT title, excerpt, image FROM posts WHERE slug = ? AND status = "published"',
       [slug]
     );
@@ -1388,7 +1389,18 @@ app.get('/blog/:slug', async (req, res) => {
 
     if (posts.length > 0) {
       const post = posts[0];
-      const imageUrl = post.image ? (post.image.startsWith('http') ? post.image : `https://deadloops.com${post.image}`) : 'https://deadloops.com/logo.webp';
+      // Robust image URL generation
+      let imageUrl = 'https://deadloops.com/logo.webp';
+
+      if (post.image) {
+        if (post.image.startsWith('http')) {
+          imageUrl = post.image;
+        } else {
+          // Ensure no double slashes if post.image starts with /
+          const imagePath = post.image.startsWith('/') ? post.image : `/${post.image}`;
+          imageUrl = `https://deadloops.com${imagePath}`;
+        }
+      }
 
       html = replaceMetaTags(html, {
         title: post.title,
