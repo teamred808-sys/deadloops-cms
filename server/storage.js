@@ -165,5 +165,6 @@ module.exports = {
   getUploadsPath,
   deleteUploadedFile,
   generateId,
-  generateSlug
+  generateSlug,
+  getExcerpt
 };
