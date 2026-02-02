@@ -49,7 +49,7 @@ export default function HubPage() {
 
   const breadcrumbs = [
     { name: 'Blog', url: '/', position: 1 },
-    { name: hub.name, url: `/blog/${hub.slug}`, position: 2 },
+    { name: hub.name, url: `/${hub.slug}`, position: 2 },
   ];
 
   return (
@@ -57,7 +57,7 @@ export default function HubPage() {
       <SEOHead
         title={hub.seoTitle || hub.name}
         description={hub.metaDescription}
-        canonical={`/blog/${hub.slug}`}
+        canonical={`/${hub.slug}`}
         noIndex={hub.noIndex}
         rssFeeds={[
           { title: `${hub.name} RSS Feed`, href: `/rss/${hub.slug}.xml` }

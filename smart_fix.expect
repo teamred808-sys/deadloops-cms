@@ -1,0 +1,36 @@
+#!/usr/bin/expect -f
+
+set timeout 120
+set user "u837896566"
+set host "88.222.247.233"
+set port "65002"
+set password "Akkiboy@#1"
+
+spawn ssh -p $port -o ConnectTimeout=20 $user@$host
+
+expect {
+    "password:" {
+        send "$password\r"
+    }
+    timeout { exit 1 }
+}
+
+expect "$ "
+# Go to correctly identified directory
+send "cd domains/deadloops.com/public_html\r"
+
+expect "$ "
+# Pull changes (Traffic Counter Fix)
+send "git pull\r"
+
+expect "$ "
+# Delete correct index.html files (Homepage White Screen Fix)
+send "find . -name 'index.html' ! -path '*/dist/*' ! -path '*/node_modules/*' -type f -delete\r"
+
+expect "$ "
+# Try to restart server
+send "pm2 restart all || npx pm2 restart all || npm run start\r"
+
+expect "$ "
+send "exit\r"
+expect eof

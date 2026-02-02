@@ -1,0 +1,31 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+set user "u837896566"
+set host "88.222.247.233"
+set port "65002"
+set password "Akkiboy@#1"
+
+spawn ssh -p $port -o ConnectTimeout=20 $user@$host
+
+expect {
+    "password:" {
+        send "$password\r"
+    }
+    timeout {
+        exit 1
+    }
+}
+
+expect "$ "
+# Find the directory
+send "find domains -type d -name 'blog-hub-main' 2>/dev/null\r"
+
+expect "$ "
+# Check for pm2
+send "which pm2\r"
+
+expect "$ "
+send "exit\r"
+expect eof

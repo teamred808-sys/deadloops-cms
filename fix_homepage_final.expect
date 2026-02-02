@@ -1,0 +1,68 @@
+#!/usr/bin/expect -f
+
+set timeout 600
+
+set user "u837896566"
+set host "88.222.247.233"
+set port "65002"
+set password "Akkiboy@#1"
+
+spawn ssh -p $port $user@$host
+
+expect {
+    "password:" {
+        send "$password\r"
+        exp_continue
+    }
+    "(yes/no" {
+        send "yes\r"
+        exp_continue
+    }
+    "$ " {
+        # Connected successfully
+    }
+    timeout {
+        puts "\n❌ Connection timeout"
+        exit 1
+    }
+}
+
+# Navigate to project
+send "cd domains/deadloops.com/public_html\r"
+expect "$ "
+
+# Find blog-hub-main folder
+send "find . -maxdepth 3 -name 'blog-hub-main' -type d\r"
+expect "$ "
+
+# Go into it (assuming it's found)
+send "cd */blog-hub-main 2>/dev/null || cd blog-hub-main\r"
+expect "$ "
+
+# Show current directory
+send "pwd\r"
+expect "$ "
+
+# Find problematic index.html files
+send "find . -name 'index.html' ! -path '*/dist/*' -type f\r"
+expect "$ "
+
+# Delete them
+send "find . -name 'index.html' ! -path '*/dist/*' -type f -delete\r"
+expect "$ "
+
+# Verify dist/index.html exists
+send "ls -la dist/index.html\r"
+expect "$ "
+
+# Restart PM2
+send "pm2 restart all\r"
+expect "$ "
+
+send "echo '\n✅ Fix complete!'\r"
+expect "$ "
+
+puts "\n\n✅ Homepage fix deployed successfully!"
+
+send "exit\r"
+expect eof

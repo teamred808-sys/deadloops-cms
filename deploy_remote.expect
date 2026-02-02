@@ -3,7 +3,7 @@
 # Hostinger Deployment Script
 # Usage: ./deploy_remote.expect
 
-set timeout 300
+set timeout 600
 
 # Server Details
 set user "u837896566"
@@ -18,7 +18,7 @@ set project_dir "domains/deadloops.com/public_html/deadloops-main/blog-hub-main"
 # 3. Install dependencies (just in case)
 # 4. Build frontend (CRITICAL step for UI changes)
 # 5. Restart server
-set deploy_cmd "cd $project_dir && git pull && npm install && npm run build && pm2 restart all"
+set deploy_cmd "cd $project_dir && git reset --hard HEAD && git pull && npm install && npm run build && pm2 restart all"
 
 spawn ssh -p $port $user@$host
 expect {

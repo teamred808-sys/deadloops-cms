@@ -1,0 +1,65 @@
+#!/usr/bin/expect -f
+
+set timeout 120
+
+log_user 1
+
+set user "u837896566"
+set host "88.222.247.233"
+set port "65002"
+set password "Akkiboy@#1"
+
+puts "Connecting to $host:$port..."
+
+spawn ssh -p $port -o StrictHostKeyChecking=no -o ConnectTimeout=30 $user@$host
+
+expect {
+    -re ".*password.*:" {
+        send "$password\r"
+        exp_continue
+    }
+    -re ".*\\$.*" {
+        puts "\n✅ SSH Connected!"
+    }
+    timeout {
+        puts "\n❌ Connection timeout - server not reachable"
+        exit 1
+    }
+    eof {
+        puts "\n❌ Connection failed"
+        exit 1
+    }
+}
+
+puts "Finding project directory..."
+send "cd domains/deadloops.com/public_html && find . -maxdepth 2 -name 'blog-hub-main' -type d\r"
+expect -re "\\$"
+
+puts "Navigating to project..."
+send "cd deadloops-main/blog-hub-main || cd blog-hub-main\r"
+expect -re "\\$"
+
+send "pwd\r"
+expect -re "\\$"
+
+puts "Finding stray index.html files..."
+send "find . -name 'index.html' ! -path '*/dist/*' ! -path '*/node_modules/*' -type f\r"
+expect -re "\\$"
+
+puts "Deleting stray index.html files..."
+send "find . -name 'index.html' ! -path '*/dist/*' ! -path '*/node_modules/*' -type f -delete\r"
+expect -re "\\$"
+
+puts "Pulling latest changes..."
+send "git pull\r"
+expect -re "\\$"
+
+puts "Restarting PM2..."
+send "pm2 restart all\r"
+expect -re "\\$"
+
+puts "\n\n✅ DEPLOYMENT COMPLETE!"
+puts "Both homepage fix and traffic counter deployed.\n"
+
+send "exit\r"
+expect eof

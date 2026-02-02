@@ -15,10 +15,10 @@ import { Badge } from '@/components/ui/badge';
 import { formatDate } from '@/lib/storage';
 import { useAdBlocker } from '@/hooks/useAdBlocker';
 import { Post, Category, Settings } from '@/types/blog';
-import { 
-  Calendar, 
-  User, 
-  Download, 
+import {
+  Calendar,
+  User,
+  Download,
   Printer,
   Twitter,
   Facebook,
@@ -35,22 +35,22 @@ export default function BlogPostPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [post, setPost] = useState<Post | null>(null);
   const [author, setAuthor] = useState<Author | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [allPosts, setAllPosts] = useState<Post[]>([]);
   const [settings, setSettings] = useState<Settings | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [copied, setCopied] = useState(false);
-  
+
   const { isBlocked } = useAdBlocker(settings?.adBlockerDetectionEnabled ?? false);
 
   useEffect(() => {
     if (!slug) return;
-    
+
     Promise.all([
       getPostBySlug(slug),
       getCategories(),
@@ -61,13 +61,13 @@ export default function BlogPostPage() {
       setCategories(categoriesData);
       setAllPosts(postsData);
       setSettings(settingsData);
-      
+
       // Fetch author if post has authorId
       if (postData?.authorId) {
         const authorData = await getAuthor(postData.authorId);
         setAuthor(authorData);
       }
-      
+
       setLoading(false);
     });
   }, [slug]);
@@ -104,7 +104,7 @@ export default function BlogPostPage() {
   }
 
   const postCategories = categories.filter(cat => post.categories.includes(cat.id));
-  
+
   // Related posts (same category, excluding current)
   const relatedPosts = allPosts
     .filter(p => p.id !== post.id && p.categories.some(cat => post.categories.includes(cat)))
@@ -112,8 +112,8 @@ export default function BlogPostPage() {
 
   const handleDownloadClick = () => {
     if (isBlocked) {
-      toast({ 
-        title: 'Ad Blocker Detected', 
+      toast({
+        title: 'Ad Blocker Detected',
         description: 'Please disable your ad blocker to download files.',
         variant: 'destructive',
       });
@@ -130,7 +130,7 @@ export default function BlogPostPage() {
   const handleShare = (platform: string) => {
     const url = window.location.href;
     const text = post.title;
-    
+
     const urls: Record<string, string> = {
       twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
@@ -163,7 +163,7 @@ export default function BlogPostPage() {
       <SEOHead
         title={post.title}
         description={post.metaDescription || post.excerpt}
-        canonical={`${window.location.origin}/blog/${post.slug}`}
+        canonical={`${window.location.origin}/${post.slug}`}
         noIndex={post.noIndex || post.status !== 'published'}
         ogImage={featuredImage}
         ogType="article"
@@ -174,16 +174,16 @@ export default function BlogPostPage() {
         }}
         enableDiscoverDirectives={isPublishedAndIndexable}
       />
-      
+
       <BlogHeader />
-      
+
       {/* Ad Blocker Popup */}
       {settings?.adBlockerDetectionEnabled && <AdBlockerPopup />}
 
       <main className="flex-1">
         {/* Hero Image */}
         {featuredImage && (
-          <div 
+          <div
             className="w-full bg-muted overflow-hidden"
             style={{ aspectRatio: '16 / 9', maxHeight: '400px' }}
           >
@@ -222,7 +222,7 @@ export default function BlogPostPage() {
 
             {/* Meta */}
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-8 pb-8 border-b">
-              <Link 
+              <Link
                 to={`/author/${author?.slug || 'admin'}`}
                 className="flex items-center gap-1 hover:text-primary transition-colors"
               >
@@ -242,7 +242,7 @@ export default function BlogPostPage() {
             </div>
 
             {/* Content */}
-            <div 
+            <div
               className="prose prose-lg dark:prose-invert max-w-none mb-8"
               dangerouslySetInnerHTML={{ __html: post.content }}
             />

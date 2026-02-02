@@ -1,0 +1,60 @@
+#!/usr/bin/expect -f
+
+set timeout 600
+
+# Server Details  
+set user "u837896566"
+set host "88.222.247.233"
+set port "65002"
+set password "Akkiboy@#1"
+
+spawn ssh -p $port $user@$host
+expect {
+    "password:" {
+        send "$password\\r"
+    }
+    "(yes/no" {
+        send "yes\\r"
+        expect "password:"
+        send "$password\\r"
+    }
+}
+
+expect "$ "
+
+# Find the project directory
+send "find domains -name 'blog-hub-main' -type d 2>/dev/null | head -1\\r"
+expect "$ "
+
+# Store the output  
+set output $expect_out(buffer)
+
+# Navigate and fix
+send "cd domains/deadloops.com/public_html\\r"
+expect "$ "
+
+send "find . -name 'blog-hub-main' -type d\\r"
+expect "$ "
+
+# Remove any index.html except dist/index.html
+send "find blog-hub-main -name 'index.html' ! -path '*/dist/*' -type f\\r"
+expect "$ "
+
+send "find blog-hub-main -name 'index.html' ! -path '*/dist/*' -type f -delete\\r"
+expect "$ "
+
+# Verify dist/index.html exists
+send "ls -la blog-hub-main/dist/index.html\\r"
+expect "$ "
+
+# Restart PM2
+send "pm2 restart all\\r"
+expect "$ "
+
+send "echo 'Fix complete!'\\r"
+expect "$ "
+
+puts "\\n✅ Fix Applied!"
+
+send "exit\\r"
+expect eof

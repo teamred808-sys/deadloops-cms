@@ -1617,6 +1617,22 @@ async function servePostWithTags(req, res, next) {
     // Ignore static assets or API calls that might slip through (though express.static handles most)
     if (slug.includes('.') && !slug.endsWith('.html')) return next();
 
+    // RESERVED ROUTES PROTECTION
+    // These paths should never be queried as blog posts
+    const reserved = [
+      'admin',
+      'api',
+      'media',
+      'uploads',
+      'login',
+      'dashboard',
+      'rss.xml',
+      'sitemap.xml',
+      'robots.txt'
+    ];
+
+    if (reserved.includes(slug)) return next();
+
     // pool is already a promise pool from db.js
     const [posts] = await pool.query(
       'SELECT title, excerpt, image FROM posts WHERE slug = ? AND status = "published"',

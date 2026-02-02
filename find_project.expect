@@ -1,0 +1,31 @@
+#!/usr/bin/expect -f
+
+set timeout 600
+
+# Server Details
+set user "u837896566"
+set host "88.222.247.233"
+set port "65002"
+set password "Akkiboy@#1"
+
+# First, find the correct directory
+set find_cmd "find domains -name 'blog-hub-main' -type d 2>/dev/null | head -1"
+
+spawn ssh -p $port $user@$host
+expect {
+    "password:" {
+        send "$password\\r"
+    }
+    "(yes/no" {
+        send "yes\\r"
+        expect "password:"
+        send "$password\\r"
+    }
+}
+
+expect "$ "
+send "$find_cmd\\r"
+
+expect "$ "
+send "exit\\r"
+expect eof

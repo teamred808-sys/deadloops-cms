@@ -1,0 +1,47 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+
+set user "u837896566"
+set host "88.222.247.233"
+set port "65002"
+set password "Akkiboy@#1"
+
+spawn ssh -p $port -o ConnectTimeout=20 $user@$host
+
+expect {
+    "password:" {
+        send "$password\r"
+    }
+    "(yes/no" {
+        send "yes\r"
+        expect "password:"
+        send "$password\r"
+    }
+    timeout {
+        puts "\n❌ SSH Connection Timed Out"
+        exit 1
+    }
+    eof {
+        puts "\n❌ SSH Connection Failed"
+        exit 1
+    }
+}
+
+expect "$ "
+send "cd domains/deadloops.com/public_html/deadloops-main/blog-hub-main || cd domains/deadloops.com/public_html/blog-hub-main\r"
+
+expect "$ "
+send "git pull\r"
+
+expect "$ "
+send "find . -name 'index.html' ! -path '*/dist/*' -type f -delete\r"
+
+expect "$ "
+send "pm2 restart all\r"
+
+expect "$ "
+send "exit\r"
+
+puts "\n✅ Commands Executed Successfully"
+expect eof

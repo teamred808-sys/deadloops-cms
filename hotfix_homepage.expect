@@ -1,0 +1,40 @@
+#!/usr/bin/expect -f
+
+set timeout 600
+
+# Server Details
+set user "u837896566"
+set host "88.222.247.233"
+set port "65002"
+set password "Akkiboy@#1"
+
+# Find the correct project directory first, then fix the issue
+set fix_cmd "cd domains/deadloops.com/public_html && find . -name 'blog-hub-main' -type d | head -1 | xargs -I {} sh -c 'cd {} && pwd && rm -f index.html && pm2 restart all && echo \"Fixed: Removed root index.html and restarted server\"'"
+
+spawn ssh -p $port $user@$host
+expect {
+    "password:" {
+        send "$password\\r"
+    }
+    "(yes/no" {
+        send "yes\\r"
+        expect "password:"
+        send "$password\\r"
+    }
+}
+
+expect "$ "
+send "$fix_cmd\\r"
+
+# Wait for completion
+expect {
+    "$ " {
+        puts "\\n✅ Fix Applied Successfully!"
+    }
+    timeout {
+        puts "\\n❌ Command Timed Out"
+    }
+}
+
+send "exit\\r"
+expect eof
