@@ -66,55 +66,49 @@ export default function TipTapEditor({ content, onChange }: TipTapEditorProps) {
         class: 'prose prose-sm sm:prose dark:prose-invert max-w-none min-h-[300px] p-4 focus:outline-none',
       },
       handleDrop: (view, event, _slice, moved) => {
-        // If it's an internal move (text/nodes), let TipTap handle it
-        if (moved) {
-          return false;
-        }
+        if (moved) return false;
 
         const files = event.dataTransfer?.files;
-        if (!files || files.length === 0) {
-          return false;
-        }
+        if (!files || files.length === 0) return false;
 
-        // Process image files
-        const imageFiles = Array.from(files).filter(file => 
+        const imageFiles = Array.from(files).filter(file =>
           file.type.startsWith('image/')
         );
 
-        if (imageFiles.length === 0) {
-          return false;
-        }
+        if (imageFiles.length === 0) return false;
 
         event.preventDefault();
 
-        // Get drop position
         const coordinates = view.posAtCoords({
           left: event.clientX,
           top: event.clientY,
         });
 
-        imageFiles.forEach(file => {
-          // Validate file size (2MB limit)
+        imageFiles.forEach(async (file) => {
           if (file.size > 2 * 1024 * 1024) {
-            console.warn('Image file too large (max 2MB):', file.name);
+            alert('Image file too large (max 2MB)'); // Simple alert safely, prefer toast if available
             return;
           }
 
-          const reader = new FileReader();
-          reader.onload = () => {
-            const src = reader.result as string;
-            
-            // Insert image at drop position or current cursor
+          try {
+            // Dynamically import to avoid circular dep issues or just assume global availability if needed
+            // But better to use the import from ../../lib/apiClient
+            const { uploadFile, getUploadUrl } = await import('@/lib/apiClient');
+            const { url } = await uploadFile(file);
+            const fullUrl = getUploadUrl(url);
+
             if (coordinates) {
               view.dispatch(
                 view.state.tr.insert(
                   coordinates.pos,
-                  view.state.schema.nodes.image.create({ src, width: '100%', align: 'center' })
+                  view.state.schema.nodes.image.create({ src: fullUrl, width: '100%', align: 'center' })
                 )
               );
             }
-          };
-          reader.readAsDataURL(file);
+          } catch (error) {
+            console.error('Upload failed', error);
+            alert('Failed to upload image. Please try again.');
+          }
         });
 
         return true;
@@ -129,20 +123,27 @@ export default function TipTapEditor({ content, onChange }: TipTapEditorProps) {
             const file = item.getAsFile();
             if (!file || file.size > 2 * 1024 * 1024) return false;
 
-            const reader = new FileReader();
-            reader.onload = () => {
-              const src = reader.result as string;
-              const { state } = view;
-              const { selection } = state;
-              
-              view.dispatch(
-                state.tr.insert(
-                  selection.from,
-                  state.schema.nodes.image.create({ src, width: '100%', align: 'center' })
-                )
-              );
+            const uploadAndInsert = async () => {
+              try {
+                const { uploadFile, getUploadUrl } = await import('@/lib/apiClient');
+                const { url } = await uploadFile(file);
+                const fullUrl = getUploadUrl(url);
+
+                const { state } = view;
+                const { selection } = state;
+
+                view.dispatch(
+                  state.tr.insert(
+                    selection.from,
+                    state.schema.nodes.image.create({ src: fullUrl, width: '100%', align: 'center' })
+                  )
+                );
+              } catch (error) {
+                console.error('Upload failed', error);
+                alert('Failed to upload image');
+              }
             };
-            reader.readAsDataURL(file);
+            uploadAndInsert();
             return true;
           }
         }
@@ -186,14 +187,14 @@ export default function TipTapEditor({ content, onChange }: TipTapEditorProps) {
     }
   };
 
-  const ToolbarButton = ({ 
-    onClick, 
-    isActive = false, 
+  const ToolbarButton = ({
+    onClick,
+    isActive = false,
     children,
     disabled = false,
-  }: { 
-    onClick: () => void; 
-    isActive?: boolean; 
+  }: {
+    onClick: () => void;
+    isActive?: boolean;
     children: React.ReactNode;
     disabled?: boolean;
   }) => (
@@ -234,7 +235,7 @@ export default function TipTapEditor({ content, onChange }: TipTapEditorProps) {
   };
 
   return (
-    <div 
+    <div
       className={cn(
         "border rounded-lg overflow-hidden bg-background transition-colors relative",
         isDragging && "border-primary ring-2 ring-primary/20"
@@ -262,9 +263,9 @@ export default function TipTapEditor({ content, onChange }: TipTapEditorProps) {
         <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()}>
           <Redo className="h-4 w-4" />
         </ToolbarButton>
-        
+
         <div className="w-px h-6 bg-border mx-1 self-center" />
-        
+
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
           isActive={editor.isActive('heading', { level: 1 })}
