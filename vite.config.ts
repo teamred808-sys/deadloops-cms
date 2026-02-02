@@ -40,6 +40,14 @@ export default defineConfig(({ mode }) => ({
       input: {
         main: path.resolve(__dirname, "index.dev.html"),
       },
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-popover', '@radix-ui/react-dropdown-menu', 'lucide-react'],
+          utils: ['date-fns', 'clsx', 'tailwind-merge'],
+        },
+      },
     },
+    chunkSizeWarningLimit: 1000,
   },
 }));

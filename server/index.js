@@ -15,6 +15,7 @@ const {
   getExcerpt,
 } = require('./storage.js');
 const { pool } = require('./db');
+const compression = require('compression');
 
 // ============= GLOBAL ERROR HANDLERS FOR HOSTINGER STABILITY =============
 process.on('uncaughtException', (error) => {
@@ -32,6 +33,15 @@ console.log('CWD:', process.cwd());
 console.log('__dirname:', __dirname);
 
 const app = express();
+
+// 1. Gzip/Brotli Compression
+app.use(compression({
+  filter: (req, res) => {
+    if (req.headers['x-no-compression']) return false;
+    return compression.filter(req, res);
+  },
+  threshold: 1024
+}));
 const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
@@ -1592,8 +1602,11 @@ app.delete('/api/media/:filename', authenticateToken, async (req, res) => {
 // ============= UNIFIED FRONTEND SERVING (SPA) =============
 const frontendPath = path.join(__dirname, '..', 'dist');
 
-// 1. Serve static assets (JS, CSS, Images)
-app.use(express.static(frontendPath));
+// 1. Serve static assets (JS, CSS, Images) with Cache-Control
+app.use(express.static(frontendPath, {
+  maxAge: '1y', // Vite assets are hashed, so we can cache them forever
+  etag: true
+}));
 
 // 2. API 404 Handler (Must be before SPA fallback)
 app.use('/api/*', (req, res) => {

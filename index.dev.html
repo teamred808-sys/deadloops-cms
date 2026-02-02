@@ -7,6 +7,9 @@
   <!-- Preconnect for performance -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload"
+    href="https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff2"
+    as="font" type="font/woff2" crossorigin />
   <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
   <link rel="icon" type="image/webp" href="/logo.webp" />
   <title>Deadloops - Music Production Resources & Tutorials</title>
@@ -23,8 +26,21 @@
   <meta name="twitter:title" content="__OG_TITLE__" />
   <meta name="twitter:description" content="__OG_DESCRIPTION__" />
   <meta name="twitter:image" content="__OG_IMAGE__" />
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7887481478172894"
-    crossorigin="anonymous"></script>
+  <meta name="twitter:description" content="__OG_DESCRIPTION__" />
+  <meta name="twitter:image" content="__OG_IMAGE__" />
+
+  <!-- Defer AdSense (Performance) -->
+  <script>
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const script = document.createElement('script');
+        script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7887481478172894";
+        script.crossOrigin = "anonymous";
+        script.async = true;
+        document.head.appendChild(script);
+      }, 3000); // 3s delay
+    });
+  </script>
 </head>
 
 <body>
