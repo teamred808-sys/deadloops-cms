@@ -29,22 +29,42 @@
   <meta name="twitter:description" content="__OG_DESCRIPTION__" />
   <meta name="twitter:image" content="__OG_IMAGE__" />
 
-  <!-- Defer AdSense (Performance) -->
+  <meta name="twitter:description" content="__OG_DESCRIPTION__" />
+  <meta name="twitter:image" content="__OG_IMAGE__" />
+
+  <!-- Optimized AdSense Loading -->
   <script>
     window.addEventListener('load', () => {
+      // Small delay to prioritize LCP, but ensure it runs for bots/users
       setTimeout(() => {
-        const script = document.createElement('script');
-        script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7887481478172894";
-        script.crossOrigin = "anonymous";
-        script.async = true;
-        document.head.appendChild(script);
-      }, 3000); // 3s delay
+        if (!document.getElementById('adsense-script')) {
+          const script = document.createElement('script');
+          script.id = 'adsense-script';
+          script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7887481478172894";
+          script.crossOrigin = "anonymous";
+          script.async = true;
+          document.head.appendChild(script);
+        }
+      }, 1000); // reduced from 3000 to 1000 to catch bot window
     });
   </script>
 </head>
 
 <body>
-  <div id="root"></div>
+  <div id="root">
+    <!-- Critical Rendering Path Fallback -->
+    <style>
+      .app-loader {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background: #000;
+        color: #fff;
+      }
+    </style>
+    <div class="app-loader">Loading Deadloops...</div>
+  </div>
   <script type="module" src="/src/main.tsx"></script>
 </body>
 
