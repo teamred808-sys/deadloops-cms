@@ -298,6 +298,27 @@ async function ensureSchemaUpdates() {
         ADD COLUMN download_size VARCHAR(50)
       `);
       console.log('✅ Schema updated: Added download columns to posts.');
+    }
+
+    // Check if 'google_ads_enabled' exists in 'settings'
+    const [settingsColumns] = await pool.query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = DATABASE() 
+      AND TABLE_NAME = 'settings' 
+      AND COLUMN_NAME = 'google_ads_enabled'
+    `);
+
+    if (settingsColumns.length === 0) {
+      console.log('⚠️ Missing Google Ads columns in settings table. Adding them...');
+      await pool.query(`
+        ALTER TABLE settings 
+        ADD COLUMN google_ads_enabled BOOLEAN DEFAULT FALSE,
+        ADD COLUMN google_ads_client_id VARCHAR(255),
+        ADD COLUMN google_ads_code TEXT,
+        ADD COLUMN google_ads_config JSON
+      `);
+      console.log('✅ Schema updated: Added Google Ads columns to settings.');
     } else {
       console.log('✅ Schema is up to date.');
     }
