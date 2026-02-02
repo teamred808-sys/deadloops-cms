@@ -34,40 +34,50 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
-// ============= GUARANTEED HEALTH ENDPOINTS (BEFORE ANY MIDDLEWARE) =============
-app.get('/ping', (req, res) => {
-  res.send('pong');
-});
+// ============= SAFE STARTUP: DIRECTORY CONFIGURATION =============
+// 1. Determine Upload Directory
+const UPLOAD_DIR = process.env.UPLOAD_DIR
+  ? path.resolve(process.env.UPLOAD_DIR)
+  : path.join(__dirname, 'uploads');
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
+const DATA_DIR = path.join(__dirname, 'data');
 
-// ============= ENSURE REQUIRED DIRECTORIES EXIST =============
-const requiredDirs = [
-  path.resolve(__dirname, 'data'),
-  path.resolve(__dirname, 'uploads'),
-];
+console.log(`📂 Configuration:`);
+console.log(`   - Uploads: ${UPLOAD_DIR}`);
+console.log(`   - Data: ${DATA_DIR}`);
 
-for (const dir of requiredDirs) {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-    console.log('📁 Created missing dir:', dir);
+// 2. Ensure Directories Exist (Safe Mode)
+try {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
   }
+  if (!fs.existsSync(UPLOAD_DIR)) {
+    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+    console.log('✅ Created upload directory');
+  }
+} catch (error) {
+  console.error('⚠️ Failed to create directories (permissions?):', error.message);
+  console.error('   Server will continue, but uploads might fail.');
 }
 
-// Middleware
+// 3. Middleware & Serving
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
-// Serve uploads via /media (User Request) AND /uploads (Legacy Support)
-// This ensures old database entries still work while new ones use /media
-app.use('/media', express.static(getUploadsPath()));
-app.use('/uploads', express.static(getUploadsPath()));
+
+// ============= HEALTH CHECKS =============
+app.get('/ping', (req, res) => res.send('pong'));
+app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
+
+// 🛑 CRITICAL: Serve files from the SAFE configured path
+// Serve /media for new standard, /uploads for backward compatibility
+app.use('/media', express.static(UPLOAD_DIR));
+app.use('/uploads', express.static(UPLOAD_DIR));
 
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, getUploadsPath());
+    // Use the safe UPLOAD_DIR resolved at startup
+    cb(null, UPLOAD_DIR);
   },
   filename: (req, file, cb) => {
     const uniqueName = `${Date.now()}-${uuidv4()}${path.extname(file.originalname)}`;
