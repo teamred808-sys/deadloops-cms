@@ -12,6 +12,7 @@ const {
   deleteUploadedFile,
   generateId,
   generateSlug,
+  getExcerpt,
 } = require('./storage.js');
 const { pool } = require('./db');
 
@@ -403,7 +404,8 @@ app.post('/api/posts', authenticateToken, async (req, res) => {
       ...req.body,
       image, // Ensure image is set for logic usage
       id: generateId(),
-      slug: req.body.slug || generateSlug(req.body.title),
+      slug: req.body.slug || generateSlug(req.body.title || ''),
+      excerpt: req.body.excerpt || getExcerpt(req.body.content || ''),
       downloadCount: 0,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -452,7 +454,7 @@ app.put('/api/posts/:id', authenticateToken, async (req, res) => {
     const title = p.title !== undefined ? p.title : current.title;
     const slug = p.slug !== undefined ? p.slug : current.slug;
     const content = p.content !== undefined ? p.content : current.content;
-    const excerpt = p.excerpt !== undefined ? p.excerpt : current.excerpt;
+    let excerpt = p.excerpt !== undefined ? p.excerpt : current.excerpt;
     const status = p.status !== undefined ? p.status : current.status;
     const authorId = p.authorId !== undefined ? p.authorId : current.author_id;
     // Handle both featuredImage (frontend) and image (db/legacy)
@@ -463,6 +465,14 @@ app.put('/api/posts/:id', authenticateToken, async (req, res) => {
     const tags = p.tags !== undefined ? JSON.stringify(p.tags) : (typeof current.tags === 'string' ? current.tags : JSON.stringify(current.tags));
     const metaTitle = p.metaTitle !== undefined ? p.metaTitle : current.meta_title;
     const metaDescription = p.metaDescription !== undefined ? p.metaDescription : current.meta_description;
+
+    // Auto-generate excerpt if missing but content is present (and changed)
+    // If excerpt is empty (explicitly set to empty string or missing in DB) and we have content, generate it
+    if (!excerpt && content) {
+      excerpt = getExcerpt(content);
+    }
+
+    // Note: We do NOT auto-update slug for existing posts to avoid breaking links, unless explicitly requested.
 
     await pool.query(
       `UPDATE posts SET 

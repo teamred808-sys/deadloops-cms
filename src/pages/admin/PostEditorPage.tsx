@@ -125,19 +125,30 @@ export default function PostEditorPage() {
   }, [id, isEditing, navigate, toast]);
 
   const handleTitleChange = (title: string) => {
-    setFormData(prev => ({
-      ...prev,
-      title,
-      slug: prev.slug || generateSlug(title),
-    }));
+    setFormData(prev => {
+      // Auto-update slug if it was empty OR if it matches the generated slug of the previous title (synced)
+      // This ensures we don't overwrite manual edits
+      const isSynced = !prev.slug || prev.slug === generateSlug(prev.title);
+
+      return {
+        ...prev,
+        title,
+        slug: isSynced ? generateSlug(title) : prev.slug,
+      };
+    });
   };
 
   const handleContentChange = (content: string) => {
-    setFormData(prev => ({
-      ...prev,
-      content,
-      excerpt: prev.excerpt || getExcerpt(content),
-    }));
+    setFormData(prev => {
+      // Auto-update excerpt if it was empty OR matches the generated excerpt of previous content
+      const isSynced = !prev.excerpt || prev.excerpt === getExcerpt(prev.content);
+
+      return {
+        ...prev,
+        content,
+        excerpt: isSynced ? getExcerpt(content) : prev.excerpt,
+      };
+    });
   };
 
   const handleCategoryToggle = (categoryId: string, checked: boolean) => {

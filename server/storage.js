@@ -146,6 +146,16 @@ function generateSlug(title) {
     .replace(/^-+|-+$/g, '');
 }
 
+// Generate excerpt from content (strip HTML, max 160 chars)
+function getExcerpt(content, maxLength = 160) {
+  if (!content) return '';
+  // Strip HTML tags
+  const plainText = content.replace(/<[^>]+>/g, '');
+  // Trim and slice
+  if (plainText.length <= maxLength) return plainText.trim();
+  return plainText.substring(0, maxLength).trim() + '...';
+}
+
 module.exports = {
   ensureDirectories,
   readJsonFile,
