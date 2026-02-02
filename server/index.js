@@ -1375,7 +1375,11 @@ app.post('/api/upload', authenticateToken, upload.single('file'), async (req, re
 
   } catch (error) {
     console.error('❌ Upload Error:', error);
-    res.status(500).json({ error: 'Upload failed' });
+    res.status(500).json({
+      error: 'Upload failed',
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
