@@ -307,7 +307,9 @@ app.get('/api/posts/published', async (req, res) => {
         id, title, slug, content, excerpt, status, author_id as authorId, 
         download_count as downloadCount, image as featuredImage, publish_date as publishDate, 
         categories, tags, meta_title as metaTitle, meta_description as metaDescription, 
-        created_at as createdAt, updated_at as updatedAt 
+        created_at as createdAt, updated_at as updatedAt,
+        download_enabled as downloadEnabled, download_url as downloadUrl, 
+        download_filename as downloadFilename, download_size as downloadSize 
       FROM posts 
       WHERE status = 'published' 
       ORDER BY publish_date DESC
@@ -325,7 +327,9 @@ app.get('/api/posts/:id', async (req, res) => {
         id, title, slug, content, excerpt, status, author_id as authorId, 
         download_count as downloadCount, image as featuredImage, publish_date as publishDate, 
         categories, tags, meta_title as metaTitle, meta_description as metaDescription, 
-        created_at as createdAt, updated_at as updatedAt 
+        created_at as createdAt, updated_at as updatedAt,
+        download_enabled as downloadEnabled, download_url as downloadUrl, 
+        download_filename as downloadFilename, download_size as downloadSize 
       FROM posts 
       WHERE id = ?
     `, [req.params.id]);
@@ -346,7 +350,9 @@ app.get('/api/posts/slug/:slug', async (req, res) => {
         id, title, slug, content, excerpt, status, author_id as authorId, 
         download_count as downloadCount, image as featuredImage, publish_date as publishDate, 
         categories, tags, meta_title as metaTitle, meta_description as metaDescription, 
-        created_at as createdAt, updated_at as updatedAt 
+        created_at as createdAt, updated_at as updatedAt,
+        download_enabled as downloadEnabled, download_url as downloadUrl, 
+        download_filename as downloadFilename, download_size as downloadSize 
       FROM posts 
       WHERE slug = ?
     `, [req.params.slug]);
@@ -358,7 +364,9 @@ app.get('/api/posts/slug/:slug', async (req, res) => {
           id, title, slug, content, excerpt, status, author_id as authorId, 
           download_count as downloadCount, image as featuredImage, publish_date as publishDate, 
           categories, tags, meta_title as metaTitle, meta_description as metaDescription, 
-          created_at as createdAt, updated_at as updatedAt 
+          created_at as createdAt, updated_at as updatedAt,
+          download_enabled as downloadEnabled, download_url as downloadUrl, 
+          download_filename as downloadFilename, download_size as downloadSize 
         FROM posts 
         WHERE id = ?
       `, [req.params.slug]);
@@ -381,7 +389,9 @@ app.get('/api/public/posts/:slug', async (req, res) => {
         id, title, slug, content, excerpt, status, author_id as authorId, 
         download_count as downloadCount, image as featuredImage, publish_date as publishDate, 
         categories, tags, meta_title as metaTitle, meta_description as metaDescription, 
-        created_at as createdAt, updated_at as updatedAt 
+        created_at as createdAt, updated_at as updatedAt,
+        download_enabled as downloadEnabled, download_url as downloadUrl, 
+        download_filename as downloadFilename, download_size as downloadSize 
       FROM posts 
       WHERE slug = ? AND status = 'published'
     `, [req.params.slug]);
@@ -1105,7 +1115,9 @@ app.get('/api/authors/:id/posts', async (req, res) => {
         id, title, slug, content, excerpt, status, author_id as authorId, 
         download_count as downloadCount, image, publish_date as publishDate, 
         categories, tags, meta_title as metaTitle, meta_description as metaDescription, 
-        created_at as createdAt, updated_at as updatedAt 
+        created_at as createdAt, updated_at as updatedAt,
+        download_enabled as downloadEnabled, download_url as downloadUrl, 
+        download_filename as downloadFilename, download_size as downloadSize 
       FROM posts 
       WHERE author_id = ? AND status = 'published' 
       ORDER BY publish_date DESC
