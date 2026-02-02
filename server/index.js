@@ -86,6 +86,21 @@ app.use(express.json({ limit: '50mb' }));
 app.get('/ping', (req, res) => res.send('pong'));
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
+// Diagnostic endpoint to check upload configuration
+app.get('/api/debug/config', (req, res) => {
+  const files = fs.existsSync(UPLOAD_DIR) ? fs.readdirSync(UPLOAD_DIR) : [];
+  res.json({
+    uploadDir: UPLOAD_DIR,
+    dataDir: DATA_DIR,
+    uploadDirExists: fs.existsSync(UPLOAD_DIR),
+    uploadDirWritable: (() => { try { fs.accessSync(UPLOAD_DIR, fs.constants.W_OK); return true; } catch { return false; } })(),
+    filesInUploadDir: files.length,
+    sampleFiles: files.slice(0, 5),
+    cwd: process.cwd(),
+    nodeEnv: process.env.NODE_ENV || 'not set',
+  });
+});
+
 // 🛑 CRITICAL: Serve files from the SAFE configured path
 // Serve /media for new standard, /uploads for backward compatibility
 app.use('/media', express.static(UPLOAD_DIR));
