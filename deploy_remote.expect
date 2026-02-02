@@ -7,9 +7,9 @@ set timeout 300
 
 # Server Details
 set user "u837896566"
-set host "195.35.39.200"
+set host "88.222.247.233"
 set port "65002"
-set password "Agrawal@0405"
+set password "Akkiboy@#1"
 set project_dir "domains/deadloops.com/public_html/deadloops-main/blog-hub-main"
 
 # Command to run on the server

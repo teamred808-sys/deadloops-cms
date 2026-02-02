@@ -414,12 +414,13 @@ app.post('/api/posts', authenticateToken, async (req, res) => {
 
     await pool.query(
       `INSERT INTO posts 
-      (id, title, slug, content, excerpt, status, author_id, download_count, image, publish_date, categories, tags, meta_title, meta_description, created_at, updated_at) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (id, title, slug, content, excerpt, status, author_id, download_count, image, publish_date, categories, tags, meta_title, meta_description, created_at, updated_at, download_enabled, download_url, download_filename, download_size) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         newPost.id, newPost.title, newPost.slug, newPost.content, newPost.excerpt, newPost.status, newPost.authorId,
         newPost.downloadCount, image, newPost.publishDate, JSON.stringify(newPost.categories || []), JSON.stringify(newPost.tags || []),
-        newPost.metaTitle, newPost.metaDescription, newPost.createdAt, newPost.updatedAt
+        newPost.metaTitle, newPost.metaDescription, newPost.createdAt, newPost.updatedAt,
+        newPost.downloadEnabled, newPost.downloadUrl, newPost.downloadFilename, newPost.downloadSize
       ]
     );
 
@@ -467,6 +468,11 @@ app.put('/api/posts/:id', authenticateToken, async (req, res) => {
     const metaTitle = p.metaTitle !== undefined ? p.metaTitle : current.meta_title;
     let metaDescription = p.metaDescription !== undefined ? p.metaDescription : current.meta_description;
 
+    const downloadEnabled = p.downloadEnabled !== undefined ? p.downloadEnabled : current.download_enabled;
+    const downloadUrl = p.downloadUrl !== undefined ? p.downloadUrl : current.download_url;
+    const downloadFilename = p.downloadFilename !== undefined ? p.downloadFilename : current.download_filename;
+    const downloadSize = p.downloadSize !== undefined ? p.downloadSize : current.download_size;
+
     // Auto-generate excerpt/meta if missing but content is present (and changed)
     // If excerpt is empty (explicitly set to empty string or missing in DB) and we have content, generate it
     if (!excerpt && content) {
@@ -483,9 +489,10 @@ app.put('/api/posts/:id', authenticateToken, async (req, res) => {
     await pool.query(
       `UPDATE posts SET 
       title = ?, slug = ?, content = ?, excerpt = ?, status = ?, author_id = ?, image = ?, 
-      publish_date = ?, categories = ?, tags = ?, meta_title = ?, meta_description = ?, updated_at = ? 
+      publish_date = ?, categories = ?, tags = ?, meta_title = ?, meta_description = ?, updated_at = ?,
+      download_enabled = ?, download_url = ?, download_filename = ?, download_size = ?
       WHERE id = ?`,
-      [title, slug, content, excerpt, status, authorId, newImage, publishDate, categories, tags, metaTitle, metaDescription, updatedAt, req.params.id]
+      [title, slug, content, excerpt, status, authorId, newImage, publishDate, categories, tags, metaTitle, metaDescription, updatedAt, downloadEnabled, downloadUrl, downloadFilename, downloadSize, req.params.id]
     );
 
     // Return the updated object (mapped back to camelCase)
@@ -498,7 +505,8 @@ app.put('/api/posts/:id', authenticateToken, async (req, res) => {
       categories: p.categories || current.categories,
       tags: p.tags || current.tags,
       metaTitle, metaDescription,
-      createdAt: current.created_at, updatedAt
+      createdAt: current.created_at, updatedAt,
+      downloadEnabled, downloadUrl, downloadFilename, downloadSize
     });
 
   } catch (error) {
