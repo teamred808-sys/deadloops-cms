@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
-import { 
-  LayoutDashboard, 
-  FileText, 
-  Image, 
-  FolderOpen, 
-  Settings, 
+import {
+  LayoutDashboard,
+  FileText,
+  Image,
+  FolderOpen,
+  Settings,
   LogOut,
   Menu,
   PenSquare,
@@ -39,7 +39,7 @@ function SidebarContent() {
 
   const handleLogout = () => {
     logout();
-    navigate('/admin/login');
+    navigate('/superuser');
   };
 
   return (
@@ -58,17 +58,17 @@ function SidebarContent() {
       <ScrollArea className="flex-1 py-4">
         <nav className="space-y-1 px-2">
           {navItems.map((item) => {
-            const isActive = location.pathname === item.href || 
+            const isActive = location.pathname === item.href ||
               (item.href !== '/admin/dashboard' && location.pathname.startsWith(item.href));
-            
+
             return (
               <Link
                 key={item.href}
                 to={item.href}
                 className={cn(
                   'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
-                  isActive 
-                    ? 'bg-primary text-primary-foreground' 
+                  isActive
+                    ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 )}
               >
@@ -88,8 +88,8 @@ function SidebarContent() {
             <p className="text-muted-foreground text-xs truncate">{user.email}</p>
           </div>
         )}
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           className="w-full justify-start"
           onClick={handleLogout}
         >
