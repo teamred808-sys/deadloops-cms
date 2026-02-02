@@ -86,9 +86,22 @@ app.use(express.json({ limit: '50mb' }));
 app.get('/ping', (req, res) => res.send('pong'));
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
-// Diagnostic endpoint to check upload configuration
-app.get('/api/debug/config', (req, res) => {
+// Diagnostic endpoint to check upload configuration AND database schema
+app.get('/api/debug/config', async (req, res) => {
   const files = fs.existsSync(UPLOAD_DIR) ? fs.readdirSync(UPLOAD_DIR) : [];
+  let settingsColumns = [];
+  try {
+    const [cols] = await pool.query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = DATABASE() 
+      AND TABLE_NAME = 'settings'
+    `);
+    settingsColumns = cols.map(c => c.COLUMN_NAME);
+  } catch (e) {
+    settingsColumns = ['Error fetching columns: ' + e.message];
+  }
+
   res.json({
     uploadDir: UPLOAD_DIR,
     dataDir: DATA_DIR,
@@ -98,6 +111,7 @@ app.get('/api/debug/config', (req, res) => {
     sampleFiles: files.slice(0, 5),
     cwd: process.cwd(),
     nodeEnv: process.env.NODE_ENV || 'not set',
+    settingsTableColumns: settingsColumns
   });
 });
 
