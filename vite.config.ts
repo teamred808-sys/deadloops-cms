@@ -42,9 +42,10 @@ export default defineConfig(({ mode }) => ({
       },
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
-          ui: ['@radix-ui/react-dialog', '@radix-ui/react-popover', '@radix-ui/react-dropdown-menu', 'lucide-react'],
-          utils: ['date-fns', 'clsx', 'tailwind-merge'],
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-utils': ['@tanstack/react-query', 'date-fns', 'clsx', 'tailwind-merge'],
+          'ui-core': ['@radix-ui/react-dialog', '@radix-ui/react-popover', '@radix-ui/react-dropdown-menu', '@radix-ui/react-slot'],
+          'icons': ['lucide-react'],
         },
       },
     },
