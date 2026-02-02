@@ -37,9 +37,24 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
 
 // ============= SAFE STARTUP: DIRECTORY CONFIGURATION =============
 // 1. Determine Upload Directory
-// STRICT: Use env var or fall back to project root 'uploads' folder (never server/uploads)
-// STRICT: Use env var or fall back to specific persistent path (never repo folder)
-const UPLOAD_DIR = process.env.UPLOAD_DIR || '/home/u837896566/uploads';
+// STRICT: Use env var or fall back to SPECIFIC Hostinger path, or local fallback
+let UPLOAD_DIR = process.env.UPLOAD_DIR || '/home/u837896566/uploads';
+
+// Local Fallback: If Hostinger path is not accessible/creatable (e.g. on Mac), use local folder
+try {
+  // Check if we can write to the preferred path or if it exists
+  if (!fs.existsSync(UPLOAD_DIR)) {
+    // Try creating it (will fail if permissions/path parent missing on local)
+    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  }
+  // Test write permission
+  fs.accessSync(UPLOAD_DIR, fs.constants.W_OK);
+} catch (error) {
+  console.warn(`⚠️ Cannot use persistent path ${UPLOAD_DIR} (Local Dev Environment?).`);
+  // Fallback to local 'uploads'
+  UPLOAD_DIR = path.join(__dirname, 'uploads');
+  console.log(`⚠️ Falling back to local directory: ${UPLOAD_DIR}`);
+}
 
 const DATA_DIR = process.env.PERSISTENT_STORAGE_PATH
   ? path.resolve(process.env.PERSISTENT_STORAGE_PATH, 'data')
@@ -83,7 +98,8 @@ const storage = multer.diskStorage({
     cb(null, UPLOAD_DIR);
   },
   filename: (req, file, cb) => {
-    const uniqueName = `${Date.now()}-${uuidv4()}${path.extname(file.originalname)}`;
+    // User requested format: Date.now() + "-" + file.originalname
+    const uniqueName = Date.now() + "-" + file.originalname;
     cb(null, uniqueName);
   },
 });
@@ -113,10 +129,12 @@ app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => 
   // We just return the URL relative to the domain (served via express.static)
   console.log(`✅ File saved to: ${req.file.path}`);
 
+  // User requested URL format: /uploads/filename
+  const fileUrl = `/uploads/${req.file.filename}`;
+
   res.json({
     filename: req.file.filename,
-    // Return /media URL as requested
-    url: `/media/${req.file.filename}`,
+    url: fileUrl,
     size: req.file.size,
     type: req.file.mimetype,
   });

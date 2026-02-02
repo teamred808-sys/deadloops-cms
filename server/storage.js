@@ -11,9 +11,17 @@ const BASE_DIR = process.env.PERSISTENT_STORAGE_PATH
 const DATA_DIR = BASE_DIR; // Keep data in root/data or custom path
 
 // Strict adherence to UPLOAD_DIR or root directory fallback
-const UPLOADS_DIR = process.env.UPLOAD_DIR
-  ? path.resolve(process.env.UPLOAD_DIR)
-  : path.resolve('uploads'); // Default to root/uploads (NOT server/uploads)
+let UPLOADS_DIR = process.env.UPLOAD_DIR || '/home/u837896566/uploads';
+
+// Local Fallback: If Hostinger path is not accessible (e.g. on Mac), use local
+try {
+  if (!fs.existsSync(UPLOADS_DIR)) {
+    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+  }
+  fs.accessSync(UPLOADS_DIR, fs.constants.W_OK);
+} catch (error) {
+  UPLOADS_DIR = path.resolve('uploads'); // Fallback to root/uploads
+}
 
 console.log(`📂 Storage Configuration:`);
 console.log(`   - Data: ${DATA_DIR}`);
