@@ -237,6 +237,15 @@ function authenticateToken(req, res, next) {
   });
 }
 
+// Helper function to parse post data from database
+function parsePostData(post) {
+  return {
+    ...post,
+    categories: typeof post.categories === 'string' ? JSON.parse(post.categories || '[]') : (post.categories || []),
+    tags: typeof post.tags === 'string' ? JSON.parse(post.tags || '[]') : (post.tags || [])
+  };
+}
+
 // ============= POSTS API =============
 app.get('/api/posts', async (req, res) => {
   try {
@@ -248,7 +257,7 @@ app.get('/api/posts', async (req, res) => {
         created_at as createdAt, updated_at as updatedAt 
       FROM posts
     `);
-    res.json(posts);
+    res.json(posts.map(parsePostData));
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch posts' });
   }
@@ -266,7 +275,7 @@ app.get('/api/posts/published', async (req, res) => {
       WHERE status = 'published' 
       ORDER BY publish_date DESC
     `);
-    res.json(posts);
+    res.json(posts.map(parsePostData));
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch published posts' });
   }
@@ -287,7 +296,7 @@ app.get('/api/posts/:id', async (req, res) => {
     if (posts.length === 0) {
       return res.status(404).json({ error: 'Post not found' });
     }
-    res.json(posts[0]);
+    res.json(parsePostData(posts[0]));
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch post' });
   }
@@ -317,11 +326,11 @@ app.get('/api/posts/slug/:slug', async (req, res) => {
         WHERE id = ?
       `, [req.params.slug]);
 
-      if (byID.length > 0) return res.json(byID[0]);
+      if (byID.length > 0) return res.json(parsePostData(byID[0]));
 
       return res.status(404).json({ error: 'Post not found' });
     }
-    res.json(posts[0]);
+    res.json(parsePostData(posts[0]));
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch post by slug' });
   }
@@ -343,7 +352,7 @@ app.get('/api/public/posts/:slug', async (req, res) => {
     if (posts.length === 0) {
       return res.status(404).json({ error: 'Post not found' });
     }
-    res.json(posts[0]);
+    res.json(parsePostData(posts[0]));
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch published post by slug' });
   }
