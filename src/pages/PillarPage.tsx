@@ -12,7 +12,10 @@ import BlogHeader from '@/components/blog/BlogHeader';
 import BlogFooter from '@/components/blog/BlogFooter';
 
 export default function PillarPage() {
-  const { pillarSlug } = useParams<{ pillarSlug: string }>();
+  // Can be 'slug' (from RootSlugPage) or 'pillarSlug' (legacy/direct route)
+  const params = useParams();
+  const pillarSlug = params.slug || params.pillarSlug;
+
   const [pillar, setPillar] = useState<PillarPageType | null>(null);
 
   useEffect(() => {
@@ -67,7 +70,7 @@ export default function PillarPage() {
             ) : (
               <div className="space-y-8">
                 <p className="text-muted-foreground italic">[Content to be added by site owner]</p>
-                
+
                 {/* Content placeholders */}
                 <div className="p-6 border-2 border-dashed rounded-lg">
                   <h2 className="text-xl font-semibold mb-2">[Section H2 Placeholder]</h2>

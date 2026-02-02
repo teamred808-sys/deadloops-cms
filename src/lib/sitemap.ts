@@ -22,11 +22,11 @@ function getSEOSettings(): SEOSettings {
 function getPostEntries(): SitemapEntry[] {
   const posts = getStorageItem<Post[]>(STORAGE_KEYS.POSTS, []);
   const settings = getSEOSettings();
-  
+
   return posts
     .filter(post => post.status === 'published' && !shouldNoIndexPost(post))
     .map(post => ({
-      loc: `/blog/${post.slug}`,
+      loc: `/${post.slug}`,
       lastmod: post.updatedAt || post.createdAt,
       changefreq: settings.sitemapChangefreq,
       priority: settings.sitemapPriority.blog,
@@ -37,11 +37,11 @@ function getPostEntries(): SitemapEntry[] {
 function getHubEntries(): SitemapEntry[] {
   const hubs = getStorageItem<Hub[]>(STORAGE_KEYS.HUBS, []);
   const settings = getSEOSettings();
-  
+
   return hubs
     .filter(hub => !shouldNoIndexHub(hub))
     .map(hub => ({
-      loc: `/blog/${hub.slug}`,
+      loc: `/${hub.slug}`,
       lastmod: hub.updatedAt || hub.createdAt,
       changefreq: 'weekly' as const,
       priority: settings.sitemapPriority.hub,
@@ -52,7 +52,7 @@ function getHubEntries(): SitemapEntry[] {
 function getPillarEntries(): SitemapEntry[] {
   const pillars = getStorageItem<PillarPage[]>(STORAGE_KEYS.PILLARS, []);
   const settings = getSEOSettings();
-  
+
   return pillars
     .filter(pillar => !shouldNoIndexPillar(pillar))
     .map(pillar => ({
@@ -67,7 +67,7 @@ function getPillarEntries(): SitemapEntry[] {
 function getProgrammaticEntries(): SitemapEntry[] {
   const pages = getStorageItem<ProgrammaticPage[]>(STORAGE_KEYS.PROGRAMMATIC, []);
   const settings = getSEOSettings();
-  
+
   return pages
     .filter(page => !shouldNoIndexProgrammatic(page))
     .map(page => ({
@@ -82,7 +82,7 @@ function getProgrammaticEntries(): SitemapEntry[] {
 function getResourceEntries(): SitemapEntry[] {
   const resources = getStorageItem<ResourcePage[]>(STORAGE_KEYS.RESOURCES, []);
   const settings = getSEOSettings();
-  
+
   return resources
     .filter(resource => !shouldNoIndexResource(resource))
     .map(resource => ({
@@ -97,7 +97,7 @@ function getResourceEntries(): SitemapEntry[] {
 function getAuthorEntries(): SitemapEntry[] {
   const authors = getStorageItem<Author[]>(STORAGE_KEYS.AUTHORS, []);
   const settings = getSEOSettings();
-  
+
   return authors.map(author => ({
     loc: `/author/${author.slug}`,
     lastmod: author.updatedAt || author.createdAt,
@@ -109,7 +109,7 @@ function getAuthorEntries(): SitemapEntry[] {
 // Get all sitemap entries
 export function getAllSitemapEntries(): SitemapEntry[] {
   const settings = getSEOSettings();
-  
+
   const entries: SitemapEntry[] = [
     // Home page
     {
@@ -132,7 +132,7 @@ export function getAllSitemapEntries(): SitemapEntry[] {
     ...getResourceEntries(),
     ...getAuthorEntries(),
   ];
-  
+
   return entries;
 }
 
@@ -140,11 +140,11 @@ export function getAllSitemapEntries(): SitemapEntry[] {
 export function generateSitemapXml(): string {
   const baseUrl = getCanonicalBase();
   const entries = getAllSitemapEntries();
-  
+
   const urlEntries = entries.map(entry => {
     const fullUrl = `${baseUrl}${entry.loc}`;
     const lastmod = entry.lastmod.split('T')[0]; // Format as YYYY-MM-DD
-    
+
     return `  <url>
     <loc>${escapeXml(fullUrl)}</loc>
     <lastmod>${lastmod}</lastmod>
@@ -152,7 +152,7 @@ export function generateSitemapXml(): string {
     <priority>${entry.priority.toFixed(1)}</priority>
   </url>`;
   }).join('\n');
-  
+
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urlEntries}
@@ -190,20 +190,20 @@ export function getSitemapStats(): {
 // Validate sitemap entry
 export function validateSitemapEntry(entry: SitemapEntry): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
-  
+
   if (!entry.loc) {
     errors.push('URL location is required');
   }
-  
+
   if (entry.priority < 0 || entry.priority > 1) {
     errors.push('Priority must be between 0.0 and 1.0');
   }
-  
+
   try {
     new Date(entry.lastmod);
   } catch {
     errors.push('Invalid lastmod date');
   }
-  
+
   return { valid: errors.length === 0, errors };
 }

@@ -81,12 +81,12 @@ export default function ProgrammaticPage() {
           {/* Related Links Section */}
           <section className="mt-12 pt-8 border-t">
             <h2 className="text-xl font-semibold mb-4">Related Guides</h2>
-            
+
             {/* Link to Hub */}
             {template.defaultHub && (
               <div className="mb-4">
                 <Link
-                  to={`/blog/${template.defaultHub}`}
+                  to={`/${template.defaultHub}`}
                   className="text-primary hover:underline"
                 >
                   Browse all {template.defaultHub.replace('-', ' ')} articles →

@@ -10,7 +10,10 @@ import BlogFooter from '@/components/blog/BlogFooter';
 import BlogCard from '@/components/blog/BlogCard';
 
 export default function HubPage() {
-  const { hubSlug } = useParams<{ hubSlug: string }>();
+  // Can be 'slug' (from RootSlugPage) or 'hubSlug' (legacy/direct route if preserved)
+  const params = useParams();
+  const hubSlug = params.slug || params.hubSlug;
+
   const [hub, setHub] = useState<Hub | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);

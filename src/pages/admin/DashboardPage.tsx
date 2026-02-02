@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  FileText, 
-  Download, 
-  TrendingUp, 
+import {
+  FileText,
+  Download,
+  TrendingUp,
   Plus,
   Eye,
   Edit,
@@ -148,9 +148,9 @@ export default function DashboardPage() {
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-3">
                         {post.featuredImage && (
-                          <img 
-                            src={post.featuredImage} 
-                            alt="" 
+                          <img
+                            src={post.featuredImage}
+                            alt=""
                             className="h-10 w-10 rounded object-cover hidden sm:block"
                           />
                         )}
@@ -168,7 +168,7 @@ export default function DashboardPage() {
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
                         <Button variant="ghost" size="icon" asChild>
-                          <Link to={`/blog/${post.slug}`} target="_blank">
+                          <Link to={`/${post.slug}`} target="_blank">
                             <Eye className="h-4 w-4" />
                           </Link>
                         </Button>

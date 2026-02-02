@@ -18,7 +18,7 @@ export default function BlogCard({ post, categories, priority = false }: BlogCar
     <Card className="overflow-hidden group hover:shadow-lg transition-all duration-300 gradient-card border-border/50 hover:glow-primary">
       <div className="flex flex-row md:flex-col">
         {/* Image Section */}
-        <Link to={`/blog/${post.slug}`} className="flex-shrink-0">
+        <Link to={`/${post.slug}`} className="flex-shrink-0">
           {post.featuredImage ? (
             <div className="w-20 h-20 md:w-full md:h-auto md:aspect-video overflow-hidden rounded-lg md:rounded-none m-2 md:m-0">
               <img
@@ -33,7 +33,7 @@ export default function BlogCard({ post, categories, priority = false }: BlogCar
               />
             </div>
           ) : (
-            <div 
+            <div
               className="w-20 h-20 md:w-full md:h-auto md:aspect-video bg-muted flex items-center justify-center rounded-lg md:rounded-none m-2 md:m-0"
               style={{ minHeight: '80px' }}
             >
@@ -49,9 +49,9 @@ export default function BlogCard({ post, categories, priority = false }: BlogCar
             {postCategories.length > 0 && (
               <div className="flex flex-wrap gap-1 mb-2">
                 {postCategories.slice(0, 2).map((category, index) => (
-                  <Badge 
-                    key={category.id} 
-                    variant="secondary" 
+                  <Badge
+                    key={category.id}
+                    variant="secondary"
                     className={`text-xs ${index > 0 ? 'hidden md:inline-flex' : 'inline-flex'}`}
                   >
                     {category.name}
@@ -61,7 +61,7 @@ export default function BlogCard({ post, categories, priority = false }: BlogCar
             )}
 
             {/* Title */}
-            <Link to={`/blog/${post.slug}`}>
+            <Link to={`/${post.slug}`}>
               <h2 className="text-base md:text-lg font-semibold line-clamp-2 group-hover:text-primary transition-colors mb-1 md:mb-2">
                 {post.title}
               </h2>

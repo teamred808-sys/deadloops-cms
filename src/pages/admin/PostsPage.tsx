@@ -293,7 +293,7 @@ export default function PostsPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="bg-popover">
                             <DropdownMenuItem asChild>
-                              <Link to={`/blog/${post.slug}`} target="_blank">
+                              <Link to={`/${post.slug}`} target="_blank">
                                 <Eye className="mr-2 h-4 w-4" /> View
                               </Link>
                             </DropdownMenuItem>

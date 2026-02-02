@@ -337,6 +337,24 @@ async function ensureSchemaUpdates() {
       console.log('✅ Schema is up to date.');
     }
 
+    // Check if 'sessions' exists in 'daily_visitors'
+    const [visitorColumns] = await pool.query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = DATABASE() 
+      AND TABLE_NAME = 'daily_visitors' 
+      AND COLUMN_NAME = 'sessions'
+    `);
+
+    if (visitorColumns.length === 0) {
+      console.log('⚠️ Missing sessions column in daily_visitors table. Adding it...');
+      await pool.query(`
+        ALTER TABLE daily_visitors 
+        ADD COLUMN sessions JSON
+      `);
+      console.log('✅ Schema updated: Added sessions column to daily_visitors.');
+    }
+
   } catch (error) {
     console.error('❌ Failed to update schema:', error);
   }
@@ -1413,32 +1431,45 @@ app.post('/api/track', async (req, res) => {
 
     const today = new Date().toISOString().split('T')[0];
 
-    // UPSERT daily_visitors
-    // Requires logic: increment unique if session not seen?
-    // In simple version without sessions table:
-    // We can't easily dedup sessions without a sessions column or table.
-    // Schema definition for daily_visitors only has unique_visitors INT.
-    // It does NOT have a sessions JSON store?
-    // Wait, migrate.js didn't migrate 'sessions' array?
-    // Schema: create table ... (date, unique_visitors, total_pageviews).
-    // It lost the 'sessions' array capability.
-    // So 'unique_visitors' will be approximate or just increment on every hit?
-    // Let's just increment total_pageviews for now. 
-    // Real tracking needs a sessions table. 
-    // I will do simple increment:
+    // UPSERT daily_visitors with session tracking
+    const [rows] = await pool.query('SELECT * FROM daily_visitors WHERE date = ?', [today]);
 
-    await pool.query(`
-            INSERT INTO daily_visitors (date, unique_visitors, total_pageviews, last_updated)
-            VALUES (?, 1, 1, NOW())
-            ON DUPLICATE KEY UPDATE 
-            total_pageviews = total_pageviews + 1, 
-            last_updated = NOW()
-            -- Unique visitor logic skipped for simplicity in V1 without sessions table
-        `, [today]);
+    if (rows.length === 0) {
+      // New day record
+      await pool.query(`
+        INSERT INTO daily_visitors (date, unique_visitors, total_pageviews, sessions, last_updated)
+        VALUES (?, 1, 1, ?, NOW())
+      `, [today, JSON.stringify([session_id])]);
+    } else {
+      const record = rows[0];
+      let sessions = [];
+      try {
+        sessions = typeof record.sessions === 'string' ? JSON.parse(record.sessions) : (record.sessions || []);
+      } catch (e) {
+        sessions = [];
+      }
+
+      const isNewVisitor = !sessions.includes(session_id);
+
+      if (isNewVisitor) {
+        sessions.push(session_id);
+      }
+
+      await pool.query(`
+        UPDATE daily_visitors 
+        SET 
+          unique_visitors = unique_visitors + ?,
+          total_pageviews = total_pageviews + 1,
+          sessions = ?,
+          last_updated = NOW()
+        WHERE date = ?
+      `, [isNewVisitor ? 1 : 0, JSON.stringify(sessions), today]);
+    }
 
     res.json({ success: true });
   } catch (e) {
     console.error('Tracking error', e);
+    // Return success to not break frontend
     res.json({ success: true });
   }
 });
@@ -1578,15 +1609,25 @@ const replaceMetaTags = (html, metadata) => {
     .replace(/__OG_URL__/g, metadata.url || 'https://deadloops.com');
 };
 
-// 3. Dynamic OG Tags for Blog Posts
-app.get('/blog/:slug', async (req, res) => {
+// 3. Dynamic OG Tags for Root Level Posts (Logic unification)
+async function servePostWithTags(req, res, next) {
   try {
     const { slug } = req.params;
+
+    // Ignore static assets or API calls that might slip through (though express.static handles most)
+    if (slug.includes('.') && !slug.endsWith('.html')) return next();
+
     // pool is already a promise pool from db.js
     const [posts] = await pool.query(
       'SELECT title, excerpt, image FROM posts WHERE slug = ? AND status = "published"',
       [slug]
     );
+
+    // If no post found, it might be a client-side route, hub, or pillar. 
+    // Pass to SPA fallback (next())
+    if (posts.length === 0) {
+      return next();
+    }
 
     const filePath = path.join(frontendPath, 'index.html');
 
@@ -1597,46 +1638,49 @@ app.get('/blog/:slug', async (req, res) => {
 
     let html = fs.readFileSync(filePath, 'utf8');
 
-    if (posts.length > 0) {
-      const post = posts[0];
-      // Robust image URL generation
-      let imageUrl = 'https://deadloops.com/logo.webp';
+    const post = posts[0];
+    // Robust image URL generation
+    let imageUrl = 'https://deadloops.com/logo.webp';
 
-      if (post.image) {
-        if (post.image.startsWith('http')) {
-          imageUrl = post.image;
-        } else {
-          // Ensure no double slashes if post.image starts with /
-          const imagePath = post.image.startsWith('/') ? post.image : `/${post.image}`;
-          imageUrl = `https://deadloops.com${imagePath}`;
-        }
+    if (post.image) {
+      if (post.image.startsWith('http')) {
+        imageUrl = post.image;
+      } else {
+        // Ensure no double slashes if post.image starts with /
+        const imagePath = post.image.startsWith('/') ? post.image : `/${post.image}`;
+        imageUrl = `https://deadloops.com${imagePath}`;
       }
-
-      html = replaceMetaTags(html, {
-        title: post.title,
-        description: post.excerpt,
-        image: imageUrl,
-        url: `https://deadloops.com/blog/${slug}`
-      });
-    } else {
-      // Post not found, use defaults
-      html = replaceMetaTags(html, {});
     }
+
+    html = replaceMetaTags(html, {
+      title: post.title,
+      description: post.excerpt,
+      image: imageUrl,
+      url: `https://deadloops.com/${slug}`
+    });
 
     res.send(html);
   } catch (error) {
     console.error('Error serving blog post with OG tags:', error);
-    // Fallback to static file if DB fails
-    res.sendFile(path.join(frontendPath, 'index.html'));
+    next();
   }
+}
+
+// 4. Redirect /blog/:slug to /:slug (Legacy Support)
+app.get('/blog/:slug', (req, res) => {
+  res.redirect(301, `/${req.params.slug}`);
 });
 
-// 4. Redirect /post/:slug to /blog/:slug (Legacy/Typo Support)
+// 5. Redirect /post/:slug to /:slug (Legacy Support)
 app.get('/post/:slug', (req, res) => {
-  res.redirect(301, `/blog/${req.params.slug}`);
+  res.redirect(301, `/${req.params.slug}`);
 });
 
-// 4. SPA Fallback - Handles all other routes
+// 6. Root Level Post Handler
+// Checks if the slug is a post. If so, serves it with tags. If not, falls back to SPA.
+app.get('/:slug', servePostWithTags);
+
+// 7. SPA Fallback - Handles all other routes
 // Replaces placeholders with default values
 app.get('*', (req, res) => {
   const filePath = path.join(frontendPath, 'index.html');

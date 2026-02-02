@@ -30,11 +30,11 @@ export default function RelatedContent({
   return (
     <section className={cn('', className)}>
       <h2 className="text-xl font-semibold mb-4">{title}</h2>
-      
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {displayPosts.map((post) => (
           <Card key={post.id} className="group overflow-hidden hover:shadow-lg transition-shadow">
-            <Link to={`/blog/${post.slug}`}>
+            <Link to={`/${post.slug}`}>
               {showImage && post.featuredImage && (
                 <div className="aspect-video overflow-hidden">
                   <img
@@ -45,13 +45,13 @@ export default function RelatedContent({
                   />
                 </div>
               )}
-              
+
               <CardHeader className="pb-2">
                 <h3 className="font-medium line-clamp-2 group-hover:text-primary transition-colors">
                   {post.title}
                 </h3>
               </CardHeader>
-              
+
               {showExcerpt && post.excerpt && (
                 <CardContent className="pt-0">
                   <p className="text-sm text-muted-foreground line-clamp-2">
@@ -90,12 +90,12 @@ export function RelatedContentList({
       <h3 className="text-sm font-semibold mb-3 uppercase tracking-wider text-muted-foreground">
         {title}
       </h3>
-      
+
       <ul className="space-y-2">
         {displayPosts.map((post) => (
           <li key={post.id}>
             <Link
-              to={`/blog/${post.slug}`}
+              to={`/${post.slug}`}
               className="flex items-center gap-2 text-sm hover:text-primary transition-colors group"
             >
               <ArrowRight className="h-3 w-3 flex-shrink-0 opacity-0 -ml-5 group-hover:opacity-100 group-hover:ml-0 transition-all" />
@@ -132,7 +132,7 @@ export function RelatedContentInline({
       {displayPosts.map((post, index) => (
         <span key={post.id}>
           <Link
-            to={`/blog/${post.slug}`}
+            to={`/${post.slug}`}
             className="text-primary hover:underline"
           >
             {post.title}

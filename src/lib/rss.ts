@@ -36,12 +36,12 @@ export function getSiteUrl(): string {
 // Get eligible posts for RSS feed (published, indexable, quality content)
 export function getEligiblePosts(posts: Post[]): Post[] {
   return posts
-    .filter(post => 
-      post.status === 'published' && 
-      !post.noIndex && 
+    .filter(post =>
+      post.status === 'published' &&
+      !post.noIndex &&
       !shouldNoIndexPost(post)
     )
-    .sort((a, b) => 
+    .sort((a, b) =>
       new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime()
     );
 }
@@ -50,8 +50,8 @@ export function getEligiblePosts(posts: Post[]): Post[] {
 export function filterPostsByCategory(posts: Post[], categorySlug: string, categories: Category[]): Post[] {
   const category = categories.find(c => c.slug === categorySlug);
   if (!category) return [];
-  
-  return posts.filter(post => 
+
+  return posts.filter(post =>
     post.categories.some(catId => {
       const cat = categories.find(c => c.id === catId);
       return cat?.slug === categorySlug || cat?.id === category.id;
@@ -61,8 +61,8 @@ export function filterPostsByCategory(posts: Post[], categorySlug: string, categ
 
 // Filter posts by tag
 export function filterPostsByTag(posts: Post[], tagSlug: string): Post[] {
-  return posts.filter(post => 
-    post.tags.some(tag => 
+  return posts.filter(post =>
+    post.tags.some(tag =>
       tag.toLowerCase().replace(/\s+/g, '-') === tagSlug
     )
   );
@@ -78,30 +78,30 @@ export function filterPostsByAuthor(posts: Post[], authorSlug: string): Post[] {
 
 // Generate RSS item for a post
 function generateRSSItem(post: Post, categories: Category[], siteUrl: string): string {
-  const postUrl = `${siteUrl}/blog/${post.slug}`;
+  const postUrl = `${siteUrl}/${post.slug}`;
   const pubDate = formatRFC822Date(post.publishDate);
-  
+
   // Get category names
   const categoryNames = post.categories
     .map(catId => categories.find(c => c.id === catId)?.name)
     .filter(Boolean);
-  
+
   // Build category tags
   const categoryTags = categoryNames
     .map(name => `    <category>${escapeXml(name as string)}</category>`)
     .join('\n');
-  
+
   // Build media tags for featured image
   let mediaTags = '';
   if (post.featuredImage) {
-    const imageUrl = post.featuredImage.startsWith('http') 
-      ? post.featuredImage 
+    const imageUrl = post.featuredImage.startsWith('http')
+      ? post.featuredImage
       : `${siteUrl}${post.featuredImage}`;
     mediaTags = `
     <media:content url="${escapeXml(imageUrl)}" medium="image" />
     <enclosure url="${escapeXml(imageUrl)}" type="image/jpeg" length="0" />`;
   }
-  
+
   return `  <item>
     <title>${escapeXml(post.title)}</title>
     <link>${escapeXml(postUrl)}</link>
@@ -159,19 +159,19 @@ export function generateMainFeed(options: RSSFeedOptions): string {
   const { posts, categories, settings, feedPath = '/rss.xml' } = options;
   const siteUrl = getSiteUrl();
   const feedUrl = `${siteUrl}${feedPath}`;
-  
+
   const eligiblePosts = getEligiblePosts(posts);
-  const lastBuildDate = eligiblePosts.length > 0 
+  const lastBuildDate = eligiblePosts.length > 0
     ? formatRFC822Date(eligiblePosts[0].publishDate)
     : formatRFC822Date(new Date().toISOString());
-  
+
   const title = options.feedTitle || settings.siteTitle || 'Blog';
   const description = options.feedDescription || settings.tagline || 'Blog Feed';
-  
+
   const header = generateRSSHeader(title, description, feedUrl, siteUrl, lastBuildDate);
   const items = eligiblePosts.map(post => generateRSSItem(post, categories, siteUrl)).join('\n');
   const footer = generateRSSFooter();
-  
+
   return header + items + '\n' + footer;
 }
 
@@ -184,28 +184,28 @@ export function generateCategoryFeed(
   const siteUrl = getSiteUrl();
   const feedPath = `/rss/${categorySlug}.xml`;
   const feedUrl = `${siteUrl}${feedPath}`;
-  
+
   // Find category
   const category = categories.find(c => c.slug === categorySlug);
   if (!category) {
     return generateEmptyFeed(`Category: ${categorySlug}`, feedUrl, siteUrl);
   }
-  
+
   // Filter and get eligible posts
   const categoryPosts = filterPostsByCategory(posts, categorySlug, categories);
   const eligiblePosts = getEligiblePosts(categoryPosts);
-  
-  const lastBuildDate = eligiblePosts.length > 0 
+
+  const lastBuildDate = eligiblePosts.length > 0
     ? formatRFC822Date(eligiblePosts[0].publishDate)
     : formatRFC822Date(new Date().toISOString());
-  
+
   const title = `${category.name} - ${settings.siteTitle}`;
   const description = category.description || `${category.name} articles from ${settings.siteTitle}`;
-  
+
   const header = generateRSSHeader(title, description, feedUrl, siteUrl, lastBuildDate);
   const items = eligiblePosts.map(post => generateRSSItem(post, categories, siteUrl)).join('\n');
   const footer = generateRSSFooter();
-  
+
   return header + items + '\n' + footer;
 }
 
@@ -218,23 +218,23 @@ export function generateTagFeed(
   const siteUrl = getSiteUrl();
   const feedPath = `/rss/tag/${tagSlug}.xml`;
   const feedUrl = `${siteUrl}${feedPath}`;
-  
+
   // Filter and get eligible posts
   const tagPosts = filterPostsByTag(posts, tagSlug);
   const eligiblePosts = getEligiblePosts(tagPosts);
-  
-  const lastBuildDate = eligiblePosts.length > 0 
+
+  const lastBuildDate = eligiblePosts.length > 0
     ? formatRFC822Date(eligiblePosts[0].publishDate)
     : formatRFC822Date(new Date().toISOString());
-  
+
   const tagName = tagSlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   const title = `${tagName} - ${settings.siteTitle}`;
   const description = `Articles tagged with ${tagName} from ${settings.siteTitle}`;
-  
+
   const header = generateRSSHeader(title, description, feedUrl, siteUrl, lastBuildDate);
   const items = eligiblePosts.map(post => generateRSSItem(post, categories, siteUrl)).join('\n');
   const footer = generateRSSFooter();
-  
+
   return header + items + '\n' + footer;
 }
 
@@ -247,23 +247,23 @@ export function generateAuthorFeed(
   const siteUrl = getSiteUrl();
   const feedPath = `/rss/author/${authorSlug}.xml`;
   const feedUrl = `${siteUrl}${feedPath}`;
-  
+
   // Filter and get eligible posts
   const authorPosts = filterPostsByAuthor(posts, authorSlug);
   const eligiblePosts = getEligiblePosts(authorPosts);
-  
-  const lastBuildDate = eligiblePosts.length > 0 
+
+  const lastBuildDate = eligiblePosts.length > 0
     ? formatRFC822Date(eligiblePosts[0].publishDate)
     : formatRFC822Date(new Date().toISOString());
-  
+
   const authorName = authorSlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   const title = `Articles by ${authorName} - ${settings.siteTitle}`;
   const description = `Articles written by ${authorName}`;
-  
+
   const header = generateRSSHeader(title, description, feedUrl, siteUrl, lastBuildDate);
   const items = eligiblePosts.map(post => generateRSSItem(post, categories, siteUrl)).join('\n');
   const footer = generateRSSFooter();
-  
+
   return header + items + '\n' + footer;
 }
 

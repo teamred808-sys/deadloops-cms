@@ -14,18 +14,18 @@ export function normalizeUrl(url: string): string {
   try {
     // Remove query strings and hash
     let normalized = url.split('?')[0].split('#')[0];
-    
+
     // Convert to lowercase
     normalized = normalized.toLowerCase();
-    
+
     // Remove trailing slash (except for root)
     if (normalized.length > 1 && normalized.endsWith('/')) {
       normalized = normalized.slice(0, -1);
     }
-    
+
     // Remove double slashes (except in protocol)
     normalized = normalized.replace(/([^:])\/\/+/g, '$1/');
-    
+
     return normalized;
   } catch {
     return url;
@@ -36,10 +36,10 @@ export function normalizeUrl(url: string): string {
 export function generateCanonical(path: string, baseUrl?: string): string {
   const base = baseUrl || getCanonicalBase();
   const normalizedPath = normalizeUrl(path);
-  
+
   // Ensure path starts with /
   const cleanPath = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
-  
+
   return `${base}${cleanPath}`;
 }
 
@@ -52,18 +52,18 @@ export function areDuplicateUrls(url1: string, url2: string): boolean {
 export function detectDuplicates(urls: string[]): { url: string; duplicateOf: string }[] {
   const duplicates: { url: string; duplicateOf: string }[] = [];
   const seen = new Map<string, string>();
-  
+
   for (const url of urls) {
     const normalized = normalizeUrl(url);
     const existing = seen.get(normalized);
-    
+
     if (existing && existing !== url) {
       duplicates.push({ url, duplicateOf: existing });
     } else {
       seen.set(normalized, url);
     }
   }
-  
+
   return duplicates;
 }
 
@@ -74,14 +74,14 @@ export function getCanonicalForPageType(
   additionalPath?: string
 ): string {
   const base = getCanonicalBase();
-  
+
   switch (pageType) {
     case 'home':
       return base;
     case 'blog':
-      return generateCanonical(`/blog/${slug || ''}`);
+      return generateCanonical(`/${slug || ''}`);
     case 'hub':
-      return generateCanonical(`/blog/${slug || ''}`);
+      return generateCanonical(`/${slug || ''}`);
     case 'pillar':
       return generateCanonical(`/${slug || ''}`);
     case 'programmatic':
@@ -99,13 +99,13 @@ export function getCanonicalForPageType(
 export function enforceWwwConsistency(url: string, useWww: boolean = false): string {
   try {
     const urlObj = new URL(url);
-    
+
     if (useWww && !urlObj.hostname.startsWith('www.')) {
       urlObj.hostname = `www.${urlObj.hostname}`;
     } else if (!useWww && urlObj.hostname.startsWith('www.')) {
       urlObj.hostname = urlObj.hostname.replace('www.', '');
     }
-    
+
     return urlObj.toString();
   } catch {
     return url;
@@ -115,11 +115,11 @@ export function enforceWwwConsistency(url: string, useWww: boolean = false): str
 // Check if URL is a valid internal link
 export function isValidInternalUrl(url: string, baseUrl?: string): boolean {
   const base = baseUrl || getCanonicalBase();
-  
+
   try {
     const urlObj = new URL(url, base);
     const baseObj = new URL(base);
-    
+
     return urlObj.hostname === baseObj.hostname;
   } catch {
     // Relative URLs are internal

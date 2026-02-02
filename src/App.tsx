@@ -30,63 +30,31 @@ import SettingsPage from "./pages/admin/SettingsPage";
 import AuthorsPage from "./pages/admin/AuthorsPage";
 import FooterPagesPage from "./pages/admin/FooterPagesPage";
 import FooterPageDetail from "./pages/FooterPageDetail";
+import RootSlugPage from "./pages/RootSlugPage";
 
-const queryClient = new QueryClient();
-
-function AdminRoute({ children }: { children: React.ReactNode }) {
-  return (
-    <ProtectedRoute>
-      <AdminLayout>{children}</AdminLayout>
-    </ProtectedRoute>
-  );
-}
-
-// Tracking wrapper component
-function TrackingWrapper({ children }: { children: React.ReactNode }) {
-  useVisitorTracking();
-  return <>{children}</>;
-}
-
-const App = () => {
-  return (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <TrackingWrapper>
-            <Routes>
-            {/* RSS Feed Routes */}
-              <Route path="/rss.xml" element={<RSSFeedPage />} />
-              <Route path="/rss/:categorySlug.xml" element={<RSSFeedPage />} />
-              <Route path="/rss/tag/:tagSlug.xml" element={<RSSFeedPage />} />
-              <Route path="/rss/author/:authorSlug.xml" element={<RSSFeedPage />} />
-
-            {/* Public Routes */}
+{/* Public Routes */ }
               <Route path="/" element={<HomePage />} />
               <Route path="/page/:pageNumber" element={<HomePage />} />
-              <Route path="/blog/:slug" element={<BlogPostPage />} />
-              
-              {/* SEO Hub Routes */}
-              <Route path="/blog/:hubSlug" element={<HubPage />} />
-              
-              {/* Pillar Page Routes - specific routes only */}
+{/* <Route path="/blog/:slug" element={<BlogPostPage />} /> REMOVED */ }
+
+{/* SEO Hub Routes */ }
+{/* <Route path="/blog/:hubSlug" element={<HubPage />} /> REMOVED */ }
+
+{/* Pillar Page Routes - specific routes only */ }
               <Route path="/mixing-mastering-guide" element={<PillarPage />} />
               <Route path="/home-studio-setup-guide" element={<PillarPage />} />
               <Route path="/music-production-for-beginners" element={<PillarPage />} />
               <Route path="/ultimate-sample-packs-guide" element={<PillarPage />} />
               <Route path="/music-gear-buying-guide" element={<PillarPage />} />
-              
-              {/* Programmatic SEO Routes */}
-              <Route path="/genre/:genre/:templateType" element={<ProgrammaticPage />} />
-              
-              {/* Author Profile Routes */}
+
+{/* Programmatic SEO Routes */ }
+<Route path="/genre/:genre/:templateType" element={<ProgrammaticPage />} />
+
+{/* Author Profile Routes */ }
               <Route path="/author/:authorSlug" element={<AuthorProfilePage />} />
               <Route path="/author/:authorSlug/page/:pageNumber" element={<AuthorProfilePage />} />
 
-              {/* Admin Routes - MUST be before /:pillarSlug catch-all */}
+{/* Admin Routes - MUST be before /:pillarSlug catch-all */ }
               <Route path="/superuser" element={<LoginPage />} />
               <Route path="/admin/dashboard" element={<AdminRoute><DashboardPage /></AdminRoute>} />
               <Route path="/admin/posts" element={<AdminRoute><PostsPage /></AdminRoute>} />
@@ -99,21 +67,22 @@ const App = () => {
               <Route path="/admin/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
               <Route path="/admin" element={<AdminRoute><DashboardPage /></AdminRoute>} />
 
-              {/* Footer/Static Pages */}
-              <Route path="/p/:pageSlug" element={<FooterPageDetail />} />
+{/* Footer/Static Pages */ }
+<Route path="/p/:pageSlug" element={<FooterPageDetail />} />
 
-              {/* Generic Pillar Catch-all - MUST be near the end */}
-              <Route path="/:pillarSlug" element={<PillarPage />} />
+{/* ROOT SLUG DISPATCHER - Handles Posts, Hubs, and Pillars at root level */ }
+{/* MUST be near the end but before 404 */ }
+<Route path="/:slug" element={<RootSlugPage />} />
 
-              {/* 404 Catch-all */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            </TrackingWrapper>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
+{/* 404 Catch-all */ }
+<Route path="*" element={<NotFound />} />
+            </Routes >
+            </TrackingWrapper >
+          </BrowserRouter >
+        </TooltipProvider >
+      </AuthProvider >
+    </ThemeProvider >
+  </QueryClientProvider >
   );
 };
 
