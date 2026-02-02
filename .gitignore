@@ -24,4 +24,6 @@ dist-ssr
 *.sw?
 # Uploads
 uploads/
-server/uploads/
+
+# Dev entry point
+index.html
