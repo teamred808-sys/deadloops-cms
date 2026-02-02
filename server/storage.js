@@ -6,16 +6,16 @@ const crypto = require('crypto');
 // This ensures persistence on Hostinger when mapped to /home/u12345/uploads
 const BASE_DIR = process.env.PERSISTENT_STORAGE_PATH
   ? path.resolve(process.env.PERSISTENT_STORAGE_PATH)
-  : __dirname;
+  : path.resolve('data'); // Default to root/data
 
-const DATA_DIR = path.resolve(BASE_DIR, 'data');
-// Prioritize explicit UPLOAD_DIR, else derive from BASE_DIR
+const DATA_DIR = BASE_DIR; // Keep data in root/data or custom path
+
+// Strict adherence to UPLOAD_DIR or root directory fallback
 const UPLOADS_DIR = process.env.UPLOAD_DIR
   ? path.resolve(process.env.UPLOAD_DIR)
-  : path.resolve(BASE_DIR, 'uploads');
+  : path.resolve('uploads'); // Default to root/uploads (NOT server/uploads)
 
 console.log(`📂 Storage Configuration:`);
-console.log(`   - Base: ${BASE_DIR}`);
 console.log(`   - Data: ${DATA_DIR}`);
 console.log(`   - Uploads: ${UPLOADS_DIR} (from env: ${!!process.env.UPLOAD_DIR})`);
 
