@@ -37,9 +37,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
 // ============= SAFE STARTUP: DIRECTORY CONFIGURATION =============
 // 1. Determine Upload Directory
 // STRICT: Use env var or fall back to project root 'uploads' folder (never server/uploads)
-const UPLOAD_DIR = process.env.UPLOAD_DIR
-  ? path.resolve(process.env.UPLOAD_DIR)
-  : path.resolve('uploads');
+// STRICT: Use env var or fall back to specific persistent path (never repo folder)
+const UPLOAD_DIR = process.env.UPLOAD_DIR || '/home/u837896566/uploads';
 
 const DATA_DIR = process.env.PERSISTENT_STORAGE_PATH
   ? path.resolve(process.env.PERSISTENT_STORAGE_PATH, 'data')
