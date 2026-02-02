@@ -1,0 +1,29 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+set user "u837896566"
+set host "88.222.247.233"
+set port "65002"
+set password "Akkiboy@#1"
+
+spawn ssh -p $port -o StrictHostKeyChecking=no -o ConnectTimeout=20 $user@$host
+
+expect {
+    "password:" {
+        send "$password\r"
+    }
+    timeout { exit 1 }
+}
+
+expect "$ "
+# Try Node 20
+send "/opt/alt/alt-nodejs20/root/usr/bin/node -v\r"
+send "/opt/alt/alt-nodejs20/root/usr/bin/npm -v\r"
+
+# Try Node 22 (newer)
+send "/opt/alt/alt-nodejs22/root/usr/bin/node -v\r"
+send "/opt/alt/alt-nodejs22/root/usr/bin/npm -v\r"
+
+expect "$ "
+send "exit\r"
+expect eof

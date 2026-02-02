@@ -1,0 +1,26 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+set user "u837896566"
+set host "88.222.247.233"
+set port "65002"
+set password "Akkiboy@#1"
+
+spawn ssh -p $port -o StrictHostKeyChecking=no -o ConnectTimeout=20 $user@$host
+
+expect {
+    "password:" {
+        send "$password\r"
+    }
+    timeout { exit 1 }
+}
+
+expect "$ "
+send "cd domains/deadloops.com/public_html\r"
+
+expect "$ "
+send "git log -1\r"
+
+expect "$ "
+send "exit\r"
+expect eof

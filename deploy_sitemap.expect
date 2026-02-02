@@ -1,0 +1,42 @@
+#!/usr/bin/expect -f
+
+set timeout 300
+set user "u837896566"
+set host "88.222.247.233"
+set port "65002"
+set password "Akkiboy@#1"
+
+puts "Connecting to $host..."
+spawn ssh -p $port -o StrictHostKeyChecking=no -o ConnectTimeout=20 $user@$host
+
+expect {
+    "password:" {
+        send "$password\r"
+    }
+    timeout {
+        puts "\n❌ SSH Connection Timed Out"
+        exit 1
+    }
+    eof {
+        puts "\n❌ SSH Connection Failed"
+        exit 1
+    }
+}
+
+expect "$ "
+puts "Navigating to project root..."
+send "cd domains/deadloops.com/public_html\r"
+
+expect "$ "
+puts "Pulling latest changes..."
+send "git pull\r"
+
+expect "$ "
+puts "Installing server dependencies..."
+send "cd server && npm install\r"
+
+expect "$ "
+puts "Done. Exiting..."
+send "exit\r"
+
+expect eof

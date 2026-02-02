@@ -1,0 +1,34 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+set user "u837896566"
+set host "88.222.247.233"
+set port "65002"
+set password "Akkiboy@#1"
+
+spawn ssh -p $port -o StrictHostKeyChecking=no -o ConnectTimeout=20 $user@$host
+
+expect {
+    "password:" {
+        send "$password\r"
+    }
+    timeout { exit 1 }
+}
+
+expect "$ "
+# Check current path
+send "echo \$PATH\r"
+
+expect "$ "
+# Try to find node
+send "which node\r"
+send "whereis node\r"
+
+expect "$ "
+# Check common locations
+send "ls -d /opt/alt/alt-nodejs* 2>/dev/null\r"
+send "ls -d /opt/cpanel/ea-nodejs* 2>/dev/null\r"
+
+expect "$ "
+send "exit\r"
+expect eof

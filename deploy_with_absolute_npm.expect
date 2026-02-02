@@ -1,0 +1,38 @@
+#!/usr/bin/expect -f
+
+set timeout 300
+set user "u837896566"
+set host "88.222.247.233"
+set port "65002"
+set password "Akkiboy@#1"
+
+spawn ssh -p $port -o StrictHostKeyChecking=no -o ConnectTimeout=20 $user@$host
+
+expect {
+    "password:" {
+        send "$password\r"
+    }
+    timeout { exit 1 }
+}
+
+expect "$ "
+send "cd domains/deadloops.com/public_html\r"
+
+expect "$ "
+send "git pull\r"
+
+expect "$ "
+send "cd server\r"
+
+expect "$ "
+# Use absolute path to npm (Node 22)
+send "/opt/alt/alt-nodejs22/root/usr/bin/npm install\r"
+
+expect "$ "
+# Attempt restart trigger (common in passenger/litespeed apps)
+send "mkdir -p tmp\r"
+send "touch tmp/restart.txt\r"
+
+expect "$ "
+send "exit\r"
+expect eof
