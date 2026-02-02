@@ -437,6 +437,19 @@ export async function deleteMedia(id: string): Promise<boolean> {
   return true;
 }
 
+export async function deleteMediaByFilename(filename: string): Promise<boolean> {
+  if (isServerAvailable()) {
+    try {
+      await del(`/media/${filename}`);
+      return true;
+    } catch (error) {
+      console.error('Failed to delete media by filename:', error);
+      return false;
+    }
+  }
+  return false; // Not supported in local fallback yet
+}
+
 // ============= SETTINGS API =============
 export async function getSettings(): Promise<Settings> {
   if (isServerAvailable()) {
@@ -470,7 +483,7 @@ export async function getAuthState(): Promise<AuthState> {
   if (!token) {
     return { isAuthenticated: false, user: null, token: null };
   }
-  
+
   // For local dev token, return authenticated state using stored credentials
   if (token === 'local-dev-token') {
     const localUser = getLocalUser();
@@ -480,7 +493,7 @@ export async function getAuthState(): Promise<AuthState> {
       token,
     };
   }
-  
+
   if (isServerAvailable()) {
     try {
       const result = await get<{ isAuthenticated: boolean; user: any }>('/auth/verify');
@@ -490,7 +503,7 @@ export async function getAuthState(): Promise<AuthState> {
       return { isAuthenticated: false, user: null, token: null };
     }
   }
-  
+
   clearAuthToken();
   return { isAuthenticated: false, user: null, token: null };
 }
@@ -508,7 +521,7 @@ export async function login(email: string, password: string, rememberMe: boolean
       console.error('Server login failed:', error);
     }
   }
-  
+
   // Fallback to local credentials (stored or default)
   const localUser = getLocalUser();
   if (email === localUser.email && password === localUser.password) {
@@ -520,14 +533,14 @@ export async function login(email: string, password: string, rememberMe: boolean
       token,
     };
   }
-  
+
   return null;
 }
 
 export function logout(): void {
   clearAuthToken();
   if (isServerAvailable()) {
-    post('/auth/logout').catch(() => {});
+    post('/auth/logout').catch(() => { });
   }
 }
 
@@ -559,19 +572,19 @@ export async function changeEmail(newEmail: string, password: string): Promise<{
       throw error;
     }
   }
-  
+
   // Fallback mode: verify password and update stored credentials
   const localUser = getLocalUser();
   if (password !== localUser.password) {
     throw new Error('Password is incorrect');
   }
-  
+
   const updatedUser: LocalUser = {
     ...localUser,
     email: newEmail,
   };
   setLocalUser(updatedUser);
-  
+
   return {
     success: true,
     user: { id: updatedUser.id, email: updatedUser.email, name: updatedUser.name, createdAt: updatedUser.createdAt },
@@ -633,22 +646,22 @@ export async function getAuthorBySlug(slug: string): Promise<Author | null> {
       console.error('Failed to fetch author by slug:', error);
     }
   }
-  
+
   let authors = getLocalStorage<Author[]>(STORAGE_KEYS.AUTHORS, []);
-  
+
   // Ensure default author exists if array is empty
   if (authors.length === 0) {
     authors = [defaultAuthor];
     setLocalStorage(STORAGE_KEYS.AUTHORS, authors);
   }
-  
+
   const found = authors.find(a => a.slug === slug);
-  
+
   // Fallback to default author for 'admin' slug if not found
   if (!found && slug === 'admin') {
     return defaultAuthor;
   }
-  
+
   return found || null;
 }
 
@@ -729,7 +742,7 @@ export async function getStats(): Promise<Stats> {
       console.error('Failed to fetch stats:', error);
     }
   }
-  
+
   // Calculate stats from localStorage
   const posts = getLocalStorage<Post[]>(STORAGE_KEYS.POSTS, []);
   const media = getLocalStorage<Media[]>(STORAGE_KEYS.MEDIA, []);
@@ -739,7 +752,7 @@ export async function getStats(): Promise<Stats> {
     const postDate = new Date(p.createdAt);
     return postDate.getMonth() === now.getMonth() && postDate.getFullYear() === now.getFullYear();
   });
-  
+
   return {
     totalPosts: posts.length,
     totalDownloads: posts.reduce((sum, p) => sum + (p.downloadCount || 0), 0),
@@ -758,7 +771,7 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
       console.error('Failed to fetch analytics summary:', error);
     }
   }
-  
+
   // Return empty analytics in fallback mode
   return {
     visitors_today: 0,
@@ -778,7 +791,7 @@ export async function getDailyAnalytics(days: number = 30): Promise<DailyVisitor
       console.error('Failed to fetch daily analytics:', error);
     }
   }
-  
+
   // Return empty array in fallback mode
   return [];
 }
@@ -792,7 +805,7 @@ export async function getStorageUsage(): Promise<{ used: number; limit: number; 
       console.error('Failed to fetch storage usage:', error);
     }
   }
-  
+
   // Calculate localStorage usage (approximate)
   let totalSize = 0;
   for (const key of Object.values(STORAGE_KEYS)) {
@@ -814,7 +827,7 @@ export async function exportAllData(): Promise<string> {
       console.error('Failed to export data:', error);
     }
   }
-  
+
   // Export from localStorage
   const data = {
     posts: getLocalStorage<Post[]>(STORAGE_KEYS.POSTS, []),
@@ -837,7 +850,7 @@ export async function importAllData(jsonString: string): Promise<boolean> {
       return false;
     }
   }
-  
+
   // Import to localStorage
   try {
     const data = JSON.parse(jsonString);
@@ -862,7 +875,7 @@ export async function clearAllData(): Promise<void> {
       console.error('Failed to clear data:', error);
     }
   }
-  
+
   // Clear localStorage
   for (const key of Object.values(STORAGE_KEYS)) {
     localStorage.removeItem(key);

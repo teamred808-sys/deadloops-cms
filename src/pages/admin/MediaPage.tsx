@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { getMedia, addMedia, deleteMedia } from '@/lib/api';
+import { getMedia, addMedia, deleteMedia, deleteMediaByFilename } from '@/lib/api';
 import { getUploadUrl } from '@/lib/apiClient';
 import { formatFileSize, formatDate } from '@/lib/storage';
 import { Media } from '@/types/blog';
@@ -17,11 +17,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { 
-  Upload, 
-  Search, 
-  Trash2, 
-  Copy, 
+import {
+  Upload,
+  Search,
+  Trash2,
+  Copy,
   X,
   Image as ImageIcon,
   FileImage,
@@ -45,7 +45,7 @@ export default function MediaPage() {
     });
   }, []);
 
-  const filteredMedia = media.filter(m => 
+  const filteredMedia = media.filter(m =>
     m.filename.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -53,7 +53,7 @@ export default function MediaPage() {
     if (!files) return;
 
     setUploading(true);
-    
+
     for (const file of Array.from(files)) {
       if (!file.type.startsWith('image/')) {
         toast({ title: 'Error', description: 'Only images are allowed', variant: 'destructive' });
@@ -69,7 +69,7 @@ export default function MediaPage() {
         // Get image dimensions
         const img = new window.Image();
         const url = URL.createObjectURL(file);
-        
+
         await new Promise<void>((resolve) => {
           img.onload = async () => {
             try {
@@ -88,7 +88,7 @@ export default function MediaPage() {
         toast({ title: 'Error', description: `Failed to upload ${file.name}`, variant: 'destructive' });
       }
     }
-    
+
     setUploading(false);
   }, [toast]);
 
@@ -100,11 +100,17 @@ export default function MediaPage() {
 
   const handleDelete = async () => {
     if (selectedMedia) {
-      await deleteMedia(selectedMedia.id);
+      // Use the new Safe Delete by filename if available, or fallback to ID
+      if (selectedMedia.filename) {
+        await deleteMediaByFilename(selectedMedia.filename);
+      } else {
+        await deleteMedia(selectedMedia.id);
+      }
+
       const updatedMedia = await getMedia();
       setMedia(updatedMedia);
       setSelectedMedia(null);
-      toast({ title: 'Deleted', description: 'Image has been deleted.' });
+      toast({ title: 'Deleted', description: 'Image has been permanently deleted.' });
     }
     setDeleteDialogOpen(false);
   };
@@ -170,9 +176,8 @@ export default function MediaPage() {
 
           {/* Upload Zone */}
           <div
-            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-              isDragging ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'
-            }`}
+            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${isDragging ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'
+              }`}
             onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
             onDragLeave={() => setIsDragging(false)}
             onDrop={handleDrop}
@@ -197,11 +202,10 @@ export default function MediaPage() {
               {filteredMedia.map((item) => (
                 <div
                   key={item.id}
-                  className={`relative aspect-square rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${
-                    selectedMedia?.id === item.id 
-                      ? 'border-primary ring-2 ring-primary/20' 
-                      : 'border-transparent hover:border-muted-foreground/50'
-                  }`}
+                  className={`relative aspect-square rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${selectedMedia?.id === item.id
+                    ? 'border-primary ring-2 ring-primary/20'
+                    : 'border-transparent hover:border-muted-foreground/50'
+                    }`}
                   onClick={() => setSelectedMedia(item)}
                 >
                   <img
@@ -209,6 +213,21 @@ export default function MediaPage() {
                     alt={item.filename}
                     className="w-full h-full object-cover"
                   />
+                  {/* Hover Overlay with Delete Button */}
+                  <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="h-8 w-auto px-3"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent opening details
+                        setSelectedMedia(item);
+                        setDeleteDialogOpen(true);
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -259,8 +278,8 @@ export default function MediaPage() {
                       <Copy className="mr-2 h-4 w-4" />
                       Copy URL
                     </Button>
-                    <Button 
-                      variant="destructive" 
+                    <Button
+                      variant="destructive"
                       size="sm"
                       onClick={() => setDeleteDialogOpen(true)}
                     >

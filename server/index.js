@@ -1389,6 +1389,37 @@ app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => 
   });
 });
 
+// ============= MEDIA DELETE API =============
+app.delete('/api/media/:filename', authenticateToken, async (req, res) => {
+  try {
+    const { filename } = req.params;
+
+    // Security: Prevent directory traversal
+    const safeFilename = path.basename(filename);
+    const filePath = path.join(UPLOAD_DIR, safeFilename);
+
+    // 1. Delete file from Persistent Storage
+    if (fs.existsSync(filePath)) {
+      try {
+        fs.unlinkSync(filePath);
+        console.log(`🗑️ Deleted file: ${filePath}`);
+      } catch (err) {
+        console.error('Error deleting file:', err);
+      }
+    } else {
+      console.warn(`⚠️ File not found (skipping filesystem delete): ${filePath}`);
+    }
+
+    // 2. Remove from Database
+    await pool.query('DELETE FROM media WHERE filename = ?', [safeFilename]);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('❌ Delete failed:', err);
+    res.status(500).json({ error: 'Delete failed' });
+  }
+});
+
 // ============= UNIFIED FRONTEND SERVING (SPA) =============
 const frontendPath = path.join(__dirname, '..', 'dist');
 
