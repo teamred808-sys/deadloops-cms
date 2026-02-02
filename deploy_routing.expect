@@ -1,0 +1,35 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+set user "u837896566"
+set host "88.222.247.233"
+set port "65002"
+set password "Akkiboy@#1"
+
+# Use StrictHostKeyChecking=no to avoid prompt issues
+spawn ssh -p $port -o StrictHostKeyChecking=no -o ConnectTimeout=20 $user@$host
+
+expect {
+    "password:" {
+        send "$password\r"
+    }
+    timeout {
+        puts "\n❌ SSH Connection Timed Out"
+        exit 1
+    }
+    eof {
+        puts "\n❌ SSH Connection Failed"
+        exit 1
+    }
+}
+
+expect "$ "
+send "cd domains/deadloops.com/public_html\r"
+
+expect "$ "
+send "git pull\r"
+
+expect "$ "
+send "exit\r"
+
+expect eof

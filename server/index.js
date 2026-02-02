@@ -1696,6 +1696,66 @@ app.get('/post/:slug', (req, res) => {
 // Checks if the slug is a post. If so, serves it with tags. If not, falls back to SPA.
 app.get('/:slug', servePostWithTags);
 
+// ============= SITEMAP GENERATOR =============
+const { SitemapStream, streamToPromise } = require('sitemap');
+const { createGzip } = require('zlib');
+const { Readable } = require('stream');
+
+let sitemapCache = null;
+let lastSitemapTime = 0;
+const SITEMAP_CACHE_DURATION = 60 * 60 * 1000; // 60 minutes
+
+app.get('/sitemap.xml', async (req, res) => {
+  res.header('Content-Type', 'application/xml');
+  res.header('Content-Encoding', 'gzip');
+
+  // Check cache
+  if (sitemapCache && (Date.now() - lastSitemapTime < SITEMAP_CACHE_DURATION)) {
+    return res.send(sitemapCache);
+  }
+
+  try {
+    const smStream = new SitemapStream({ hostname: 'https://deadloops.com' });
+    const pipeline = smStream.pipe(createGzip());
+
+    // 1. Static Pages
+    smStream.write({ url: '/', changefreq: 'daily', priority: 1.0 });
+    smStream.write({ url: '/blog', changefreq: 'daily', priority: 0.8 });
+    // Add other static pages if known, e.g. /about, /contact
+
+    // 2. Dynamic Posts
+    // Fetch only necessary fields
+    const [posts] = await pool.query(
+      'SELECT slug, updated_at, publishDate FROM posts WHERE status = "published"'
+    );
+
+    posts.forEach(post => {
+      // Use updated_at if available, else publishDate, else now
+      const date = post.updated_at || post.publishDate || new Date();
+      smStream.write({
+        url: `/${post.slug}`, // Root-level slug
+        lastmod: new Date(date).toISOString(),
+        changefreq: 'weekly',
+        priority: 0.7
+      });
+    });
+
+    smStream.end();
+
+    // Cache the result
+    streamToPromise(pipeline).then(sm => {
+      sitemapCache = sm;
+      lastSitemapTime = Date.now();
+      res.send(sm);
+    });
+
+  } catch (error) {
+    console.error('Sitemap generation error:', error);
+    res.status(500).end();
+  }
+});
+
+
 // 7. SPA Fallback - Handles all other routes
 // Replaces placeholders with default values
 app.get('*', (req, res) => {
