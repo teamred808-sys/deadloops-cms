@@ -97,7 +97,8 @@ export default function PostEditorPage() {
             title: post.title,
             content: post.content,
             excerpt: post.excerpt,
-            featuredImage: post.featuredImage,
+            // Handle both old ('image') and new ('featuredImage') field names
+            featuredImage: post.featuredImage || (post as any).image || null,
             status: post.status,
             publishDate: post.publishDate.slice(0, 16),
             categories: post.categories,
