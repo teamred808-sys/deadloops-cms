@@ -406,6 +406,7 @@ app.post('/api/posts', authenticateToken, async (req, res) => {
       id: generateId(),
       slug: req.body.slug || generateSlug(req.body.title || ''),
       excerpt: req.body.excerpt || getExcerpt(req.body.content || ''),
+      metaDescription: req.body.metaDescription || getExcerpt(req.body.content || ''),
       downloadCount: 0,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -464,12 +465,17 @@ app.put('/api/posts/:id', authenticateToken, async (req, res) => {
     const categories = p.categories !== undefined ? JSON.stringify(p.categories) : (typeof current.categories === 'string' ? current.categories : JSON.stringify(current.categories));
     const tags = p.tags !== undefined ? JSON.stringify(p.tags) : (typeof current.tags === 'string' ? current.tags : JSON.stringify(current.tags));
     const metaTitle = p.metaTitle !== undefined ? p.metaTitle : current.meta_title;
-    const metaDescription = p.metaDescription !== undefined ? p.metaDescription : current.meta_description;
+    let metaDescription = p.metaDescription !== undefined ? p.metaDescription : current.meta_description;
 
-    // Auto-generate excerpt if missing but content is present (and changed)
+    // Auto-generate excerpt/meta if missing but content is present (and changed)
     // If excerpt is empty (explicitly set to empty string or missing in DB) and we have content, generate it
     if (!excerpt && content) {
       excerpt = getExcerpt(content);
+    }
+
+    // Same for Meta Description
+    if (!metaDescription && content) {
+      metaDescription = getExcerpt(content);
     }
 
     // Note: We do NOT auto-update slug for existing posts to avoid breaking links, unless explicitly requested.
