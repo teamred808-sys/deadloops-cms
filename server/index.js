@@ -1336,51 +1336,21 @@ app.post('/api/clear', authenticateToken, (req, res) => {
 });
 
 // ============= FILE UPLOAD API =============
-const { uploadFileToS3 } = require('./s3');
-
-app.post('/api/upload', authenticateToken, upload.single('file'), async (req, res) => {
+app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
 
-  try {
-    const localFilePath = req.file.path;
-    const filename = req.file.filename;
-    const mimeType = req.file.mimetype;
+  // The file is already saved to the persistent path by Multer (configured via storage.js -> getUploadsPath)
+  // We just return the URL relative to the domain (served via express.static)
+  console.log(`✅ File saved to: ${req.file.path}`);
 
-    // 1. Attempt S3 Upload
-    const s3Url = await uploadFileToS3(localFilePath, filename, mimeType);
-
-    if (s3Url) {
-      // 2a. Success: Delete local file and return S3 URL
-      deleteUploadedFile(filename); // Helper from storage.js safely deletes it
-
-      console.log(`✅ Uploaded to S3: ${s3Url}`);
-      return res.json({
-        filename: filename,
-        url: s3Url, // Persistent URL
-        size: req.file.size,
-        type: mimeType,
-      });
-    }
-
-    // 2b. Fallback: Return local URL (if S3 not configured or failed)
-    console.log(`⚠️ S3 upload skipped/failed. Using local storage: ${filename}`);
-    res.json({
-      filename: filename,
-      url: `/uploads/${filename}`,
-      size: req.file.size,
-      type: mimeType,
-    });
-
-  } catch (error) {
-    console.error('❌ Upload Error:', error);
-    res.status(500).json({
-      error: 'Upload failed',
-      details: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    });
-  }
+  res.json({
+    filename: req.file.filename,
+    url: `/uploads/${req.file.filename}`, // Maps to persistent storage via app.use('/uploads', ...)
+    size: req.file.size,
+    type: req.file.mimetype,
+  });
 });
 
 // ============= UNIFIED FRONTEND SERVING (SPA) =============

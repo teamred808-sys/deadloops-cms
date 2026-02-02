@@ -2,17 +2,35 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-// Data directory paths - use path.resolve for Hostinger reliability
-const DATA_DIR = path.resolve(__dirname, 'data');
-const UPLOADS_DIR = path.resolve(__dirname, 'uploads');
+// Data directory paths - use process.env.PERSISTENT_STORAGE_PATH if available, otherwise fallback to local
+// This ensures persistence on Hostinger when mapped to /home/u12345/uploads
+const BASE_DIR = process.env.PERSISTENT_STORAGE_PATH
+  ? path.resolve(process.env.PERSISTENT_STORAGE_PATH)
+  : __dirname;
+
+const DATA_DIR = path.resolve(BASE_DIR, 'data');
+const UPLOADS_DIR = path.resolve(BASE_DIR, 'uploads');
+
+console.log(`📂 Storage Configuration:`);
+console.log(`   - Base: ${BASE_DIR}`);
+console.log(`   - Data: ${DATA_DIR}`);
+console.log(`   - Uploads: ${UPLOADS_DIR}`);
 
 // Ensure directories exist
 function ensureDirectories() {
   if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+    try {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    } catch (e) {
+      console.error('Failed to create DATA_DIR:', e);
+    }
   }
   if (!fs.existsSync(UPLOADS_DIR)) {
-    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+    try {
+      fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+    } catch (e) {
+      console.error('Failed to create UPLOADS_DIR:', e);
+    }
   }
 }
 
