@@ -1698,6 +1698,7 @@ app.get('/:slug', servePostWithTags);
 
 // ============= SITEMAP GENERATOR =============
 const { SitemapStream, streamToPromise } = require('sitemap');
+const { createGzip } = require('zlib');
 const { Readable } = require('stream');
 
 let sitemapCache = null;
@@ -1706,7 +1707,7 @@ const SITEMAP_CACHE_DURATION = 60 * 60 * 1000; // 60 minutes
 
 app.get('/sitemap.xml', async (req, res) => {
   res.header('Content-Type', 'application/xml');
-  // res.header('Content-Encoding', 'gzip'); // Disabled for debugging
+  res.header('Content-Encoding', 'gzip');
 
   // Check cache
   if (sitemapCache && (Date.now() - lastSitemapTime < SITEMAP_CACHE_DURATION)) {
@@ -1715,7 +1716,7 @@ app.get('/sitemap.xml', async (req, res) => {
 
   try {
     const smStream = new SitemapStream({ hostname: 'https://deadloops.com' });
-    // const pipeline = smStream.pipe(createGzip()); // Disabled for debugging
+    const pipeline = smStream.pipe(createGzip());
 
     // 1. Static Pages
     smStream.write({ url: '/', changefreq: 'daily', priority: 1.0 });
@@ -1723,11 +1724,11 @@ app.get('/sitemap.xml', async (req, res) => {
 
     // 2. Dynamic Posts
     const [posts] = await pool.query(
-      'SELECT slug, updated_at, publishDate FROM posts WHERE status = "published"'
+      'SELECT slug, updated_at, publish_date FROM posts WHERE status = "published"'
     );
 
     posts.forEach(post => {
-      const date = post.updated_at || post.publishDate || new Date();
+      const date = post.updated_at || post.publish_date || new Date();
       smStream.write({
         url: `/${post.slug}`,
         lastmod: new Date(date).toISOString(),
@@ -1739,7 +1740,7 @@ app.get('/sitemap.xml', async (req, res) => {
     smStream.end();
 
     // Cache the result (Buffer)
-    const sm = await streamToPromise(smStream);
+    const sm = await streamToPromise(pipeline);
     sitemapCache = sm;
     lastSitemapTime = Date.now();
     res.send(sm);
