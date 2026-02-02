@@ -512,7 +512,7 @@ export async function login(email: string, password: string, rememberMe: boolean
   // Try server first if available
   if (isServerAvailable()) {
     try {
-      const result = await post<AuthState>('/auth/login', { email, password });
+      const result = await post<AuthState>('/auth/login', { email, password, rememberMe });
       if (result.token) {
         setAuthToken(result.token, rememberMe);
       }

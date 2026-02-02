@@ -967,7 +967,7 @@ app.put('/api/settings', authenticateToken, async (req, res) => {
 // ============= AUTH API =============
 app.post('/api/auth/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
     const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
     if (users.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -979,7 +979,8 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+    const expiresIn = rememberMe ? '30d' : '24h';
+    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn });
 
     res.json({
       isAuthenticated: true,
