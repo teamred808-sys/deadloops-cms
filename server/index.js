@@ -241,6 +241,39 @@ async function initializeSettings() {
   }
 }
 
+// ============= SCHEMA MIGRATION (AUTO-HEAL) =============
+async function ensureSchemaUpdates() {
+  try {
+    console.log('🔄 Checking database schema...');
+
+    // Check if 'download_enabled' exists in 'posts'
+    const [columns] = await pool.query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = DATABASE() 
+      AND TABLE_NAME = 'posts' 
+      AND COLUMN_NAME = 'download_enabled'
+    `);
+
+    if (columns.length === 0) {
+      console.log('⚠️ Missing download columns in posts table. Adding them...');
+      await pool.query(`
+        ALTER TABLE posts 
+        ADD COLUMN download_enabled BOOLEAN DEFAULT FALSE,
+        ADD COLUMN download_url TEXT,
+        ADD COLUMN download_filename VARCHAR(255),
+        ADD COLUMN download_size VARCHAR(50)
+      `);
+      console.log('✅ Schema updated: Added download columns to posts.');
+    } else {
+      console.log('✅ Schema is up to date.');
+    }
+
+  } catch (error) {
+    console.error('❌ Failed to update schema:', error);
+  }
+}
+
 // ============= MIGRATION ENDPOINT (Run once after deploy) =============
 const { migrate } = require('./migrate');
 app.get('/api/migrate', async (req, res) => {
