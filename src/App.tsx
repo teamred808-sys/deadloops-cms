@@ -18,8 +18,7 @@ import RSSFeedPage from "./pages/RSSFeedPage";
 import NotFound from "./pages/NotFound";
 import AuthorProfilePage from "./pages/AuthorProfilePage";
 
-// Admin Layout and Pages (synchronous for instant navigation)
-import AdminLayout from "./components/admin/AdminLayout";
+// Admin Layout and Pages
 import LoginPage from "./pages/admin/LoginPage";
 import DashboardPage from "./pages/admin/DashboardPage";
 import PostsPage from "./pages/admin/PostsPage";
@@ -32,57 +31,75 @@ import FooterPagesPage from "./pages/admin/FooterPagesPage";
 import FooterPageDetail from "./pages/FooterPageDetail";
 import RootSlugPage from "./pages/RootSlugPage";
 
-{/* Public Routes */ }
-              <Route path="/" element={<HomePage />} />
-              <Route path="/page/:pageNumber" element={<HomePage />} />
-{/* <Route path="/blog/:slug" element={<BlogPostPage />} /> REMOVED */ }
+const queryClient = new QueryClient();
 
-{/* SEO Hub Routes */ }
-{/* <Route path="/blog/:hubSlug" element={<HubPage />} /> REMOVED */ }
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  return <ProtectedRoute>{children}</ProtectedRoute>;
+};
 
-{/* Pillar Page Routes - specific routes only */ }
-              <Route path="/mixing-mastering-guide" element={<PillarPage />} />
-              <Route path="/home-studio-setup-guide" element={<PillarPage />} />
-              <Route path="/music-production-for-beginners" element={<PillarPage />} />
-              <Route path="/ultimate-sample-packs-guide" element={<PillarPage />} />
-              <Route path="/music-gear-buying-guide" element={<PillarPage />} />
+const TrackingWrapper = ({ children }: { children: React.ReactNode }) => {
+  useVisitorTracking();
+  return <>{children}</>;
+};
 
-{/* Programmatic SEO Routes */ }
-<Route path="/genre/:genre/:templateType" element={<ProgrammaticPage />} />
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <AuthProvider>
+          <TooltipProvider>
+            <BrowserRouter>
+              <TrackingWrapper>
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/page/:pageNumber" element={<HomePage />} />
 
-{/* Author Profile Routes */ }
-              <Route path="/author/:authorSlug" element={<AuthorProfilePage />} />
-              <Route path="/author/:authorSlug/page/:pageNumber" element={<AuthorProfilePage />} />
+                  {/* Pillar Page Routes - specific routes only */}
+                  <Route path="/mixing-mastering-guide" element={<PillarPage />} />
+                  <Route path="/home-studio-setup-guide" element={<PillarPage />} />
+                  <Route path="/music-production-for-beginners" element={<PillarPage />} />
+                  <Route path="/ultimate-sample-packs-guide" element={<PillarPage />} />
+                  <Route path="/music-gear-buying-guide" element={<PillarPage />} />
 
-{/* Admin Routes - MUST be before /:pillarSlug catch-all */ }
-              <Route path="/superuser" element={<LoginPage />} />
-              <Route path="/admin/dashboard" element={<AdminRoute><DashboardPage /></AdminRoute>} />
-              <Route path="/admin/posts" element={<AdminRoute><PostsPage /></AdminRoute>} />
-              <Route path="/admin/posts/new" element={<AdminRoute><PostEditorPage /></AdminRoute>} />
-              <Route path="/admin/posts/edit/:id" element={<AdminRoute><PostEditorPage /></AdminRoute>} />
-              <Route path="/admin/authors" element={<AdminRoute><AuthorsPage /></AdminRoute>} />
-              <Route path="/admin/media" element={<AdminRoute><MediaPage /></AdminRoute>} />
-              <Route path="/admin/categories" element={<AdminRoute><CategoriesPage /></AdminRoute>} />
-              <Route path="/admin/pages" element={<AdminRoute><FooterPagesPage /></AdminRoute>} />
-              <Route path="/admin/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
-              <Route path="/admin" element={<AdminRoute><DashboardPage /></AdminRoute>} />
+                  {/* Programmatic SEO Routes */}
+                  <Route path="/genre/:genre/:templateType" element={<ProgrammaticPage />} />
 
-{/* Footer/Static Pages */ }
-<Route path="/p/:pageSlug" element={<FooterPageDetail />} />
+                  {/* Author Profile Routes */}
+                  <Route path="/author/:authorSlug" element={<AuthorProfilePage />} />
+                  <Route path="/author/:authorSlug/page/:pageNumber" element={<AuthorProfilePage />} />
 
-{/* ROOT SLUG DISPATCHER - Handles Posts, Hubs, and Pillars at root level */ }
-{/* MUST be near the end but before 404 */ }
-<Route path="/:slug" element={<RootSlugPage />} />
+                  {/* Admin Routes - MUST be before /:pillarSlug catch-all */}
+                  <Route path="/superuser" element={<LoginPage />} />
+                  <Route path="/admin/dashboard" element={<AdminRoute><DashboardPage /></AdminRoute>} />
+                  <Route path="/admin/posts" element={<AdminRoute><PostsPage /></AdminRoute>} />
+                  <Route path="/admin/posts/new" element={<AdminRoute><PostEditorPage /></AdminRoute>} />
+                  <Route path="/admin/posts/edit/:id" element={<AdminRoute><PostEditorPage /></AdminRoute>} />
+                  <Route path="/admin/authors" element={<AdminRoute><AuthorsPage /></AdminRoute>} />
+                  <Route path="/admin/media" element={<AdminRoute><MediaPage /></AdminRoute>} />
+                  <Route path="/admin/categories" element={<AdminRoute><CategoriesPage /></AdminRoute>} />
+                  <Route path="/admin/pages" element={<AdminRoute><FooterPagesPage /></AdminRoute>} />
+                  <Route path="/admin/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
+                  <Route path="/admin" element={<AdminRoute><DashboardPage /></AdminRoute>} />
 
-{/* 404 Catch-all */ }
-<Route path="*" element={<NotFound />} />
-            </Routes >
-            </TrackingWrapper >
-          </BrowserRouter >
-        </TooltipProvider >
-      </AuthProvider >
-    </ThemeProvider >
-  </QueryClientProvider >
+                  {/* Footer/Static Pages */}
+                  <Route path="/p/:pageSlug" element={<FooterPageDetail />} />
+
+                  {/* ROOT SLUG DISPATCHER - Handles Posts, Hubs, and Pillars at root level */}
+                  {/* MUST be near the end but before 404 */}
+                  <Route path="/:slug" element={<RootSlugPage />} />
+
+                  {/* 404 Catch-all */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+                <Toaster />
+                <Sonner />
+              </TrackingWrapper>
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 };
 
