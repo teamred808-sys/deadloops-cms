@@ -9,12 +9,15 @@ const BASE_DIR = process.env.PERSISTENT_STORAGE_PATH
   : __dirname;
 
 const DATA_DIR = path.resolve(BASE_DIR, 'data');
-const UPLOADS_DIR = path.resolve(BASE_DIR, 'uploads');
+// Prioritize explicit UPLOAD_DIR, else derive from BASE_DIR
+const UPLOADS_DIR = process.env.UPLOAD_DIR
+  ? path.resolve(process.env.UPLOAD_DIR)
+  : path.resolve(BASE_DIR, 'uploads');
 
 console.log(`📂 Storage Configuration:`);
 console.log(`   - Base: ${BASE_DIR}`);
 console.log(`   - Data: ${DATA_DIR}`);
-console.log(`   - Uploads: ${UPLOADS_DIR}`);
+console.log(`   - Uploads: ${UPLOADS_DIR} (from env: ${!!process.env.UPLOAD_DIR})`);
 
 // Ensure directories exist
 function ensureDirectories() {

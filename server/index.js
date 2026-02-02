@@ -59,6 +59,9 @@ for (const dir of requiredDirs) {
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
+// Serve uploads via /media (User Request) AND /uploads (Legacy Support)
+// This ensures old database entries still work while new ones use /media
+app.use('/media', express.static(getUploadsPath()));
 app.use('/uploads', express.static(getUploadsPath()));
 
 // Multer configuration for file uploads
@@ -83,6 +86,27 @@ const upload = multer({
       cb(new Error('Invalid file type. Only images are allowed.'));
     }
   },
+});
+
+// ... (skipping unchanged code) ...
+
+// ============= FILE UPLOAD API =============
+app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+
+  // The file is already saved to the persistent path by Multer (configured via storage.js -> getUploadsPath)
+  // We just return the URL relative to the domain (served via express.static)
+  console.log(`✅ File saved to: ${req.file.path}`);
+
+  res.json({
+    filename: req.file.filename,
+    // Return /media URL as requested
+    url: `/media/${req.file.filename}`,
+    size: req.file.size,
+    type: req.file.mimetype,
+  });
 });
 
 // Default settings
@@ -1347,7 +1371,7 @@ app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => 
 
   res.json({
     filename: req.file.filename,
-    url: `/uploads/${req.file.filename}`, // Maps to persistent storage via app.use('/uploads', ...)
+    url: `/media/${req.file.filename}`, // Maps to persistent storage via app.use('/media', ...)
     size: req.file.size,
     type: req.file.mimetype,
   });
