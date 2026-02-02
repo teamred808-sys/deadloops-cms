@@ -1421,6 +1421,11 @@ app.get('/blog/:slug', async (req, res) => {
   }
 });
 
+// 4. Redirect /post/:slug to /blog/:slug (Legacy/Typo Support)
+app.get('/post/:slug', (req, res) => {
+  res.redirect(301, `/blog/${req.params.slug}`);
+});
+
 // 4. SPA Fallback - Handles all other routes
 // Replaces placeholders with default values
 app.get('*', (req, res) => {
