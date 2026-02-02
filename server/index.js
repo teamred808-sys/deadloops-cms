@@ -1588,6 +1588,7 @@ async function start() {
   try {
     await initializeDefaultUser();
     await initializeSettings();
+    await ensureSchemaUpdates();
     await initializeDefaultAuthor();
 
     app.listen(PORT, () => {
