@@ -30,11 +30,17 @@ import AuthorsPage from "./pages/admin/AuthorsPage";
 import FooterPagesPage from "./pages/admin/FooterPagesPage";
 import FooterPageDetail from "./pages/FooterPageDetail";
 import RootSlugPage from "./pages/RootSlugPage";
+import AdminLayout from "@/components/admin/AdminLayout";
 
 const queryClient = new QueryClient();
 
+
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  return <ProtectedRoute>{children}</ProtectedRoute>;
+  return (
+    <ProtectedRoute>
+      <AdminLayout>{children}</AdminLayout>
+    </ProtectedRoute>
+  );
 };
 
 const TrackingWrapper = ({ children }: { children: React.ReactNode }) => {
