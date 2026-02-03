@@ -17,6 +17,8 @@ const {
 } = require('./storage.js');
 const { pool } = require('./db');
 const compression = require('compression');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 // ============= GLOBAL ERROR HANDLERS FOR HOSTINGER STABILITY =============
 process.on('uncaughtException', (error) => {
@@ -92,6 +94,21 @@ try {
 // 3. Middleware & Serving
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
+
+// 4. Security Middleware
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable CSP to avoid blocking inline scripts/ads
+  crossOriginEmbedderPolicy: false, // Allow embedding (ads, iframes)
+}));
+
+// Rate limiting for login endpoint (prevent brute force)
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // 10 attempts per window
+  message: { error: 'Too many login attempts. Please try again in 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // ============= HEALTH CHECKS =============
 app.get('/ping', (req, res) => res.send('pong'));
@@ -1113,7 +1130,7 @@ app.put('/api/settings', authenticateToken, async (req, res) => {
 });
 
 // ============= AUTH API =============
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', loginLimiter, async (req, res) => {
   try {
     const { email, password, rememberMe } = req.body;
     const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
