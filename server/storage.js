@@ -10,8 +10,9 @@ const BASE_DIR = process.env.PERSISTENT_STORAGE_PATH
 
 const DATA_DIR = BASE_DIR; // Keep data in root/data or custom path
 
-// Strict adherence to UPLOAD_DIR or root directory fallback
-let UPLOADS_DIR = process.env.UPLOAD_DIR || '/home/u837896566/uploads';
+// Strict adherence to UPLOAD_DIR, otherwise use persistent storage if provided
+let UPLOADS_DIR = process.env.UPLOAD_DIR || process.env.PERSISTENT_STORAGE_PATH || '/home/u837896566/uploads';
+UPLOADS_DIR = path.resolve(UPLOADS_DIR);
 
 // Local Fallback: If Hostinger path is not accessible (e.g. on Mac), use local
 try {

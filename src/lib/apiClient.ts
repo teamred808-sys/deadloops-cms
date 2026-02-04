@@ -149,10 +149,10 @@ export async function uploadMedia(
   const token = getAuthToken();
   const formData = new FormData();
   formData.append('file', file);
-  // Backend doesn't strictly use width/height in upload, but we can keep them if needed later.
-  // CRITICAL FIX: Endpoint must be /upload, not /media
+  if (width !== undefined) formData.append('width', String(width));
+  if (height !== undefined) formData.append('height', String(height));
 
-  const response = await fetch(`${API_BASE}/upload`, {
+  const response = await fetch(`${API_BASE}/media`, {
     method: 'POST',
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
