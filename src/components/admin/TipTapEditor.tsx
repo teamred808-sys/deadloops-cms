@@ -105,9 +105,9 @@ export default function TipTapEditor({ content, onChange }: TipTapEditorProps) {
                 )
               );
             }
-          } catch (error) {
+          } catch (error: any) {
             console.error('Upload failed', error);
-            alert('Failed to upload image. Please try again.');
+            alert(`Failed to upload image: ${error.message || 'Unknown error'}`);
           }
         });
 

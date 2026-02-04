@@ -201,9 +201,9 @@ export default function PostEditorPage() {
           const media = await import('@/lib/api').then(m => m.addMedia(file, img.width, img.height));
           setFormData(prev => ({ ...prev, featuredImage: media.url }));
           toast({ title: 'Image uploaded', description: 'Featured image set successfully.' });
-        } catch (error) {
+        } catch (error: any) {
           console.error(error);
-          toast({ title: 'Error', description: 'Failed to upload image', variant: 'destructive' });
+          toast({ title: 'Error', description: `Failed to upload image: ${error.message || 'Unknown error'}`, variant: 'destructive' });
         } finally {
           URL.revokeObjectURL(objectUrl);
         }
