@@ -9,7 +9,9 @@ const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const {
   getUploadsPath,
+  getDataPath,
   getStorageUsage,
+  ensureDirectories,
   deleteUploadedFile,
   generateId,
   generateSlug,
@@ -49,47 +51,16 @@ const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 // ============= SAFE STARTUP: DIRECTORY CONFIGURATION =============
-// 1. Determine Upload Directory
-// STRICT: Use env var or fall back to SPECIFIC Hostinger path, or local fallback
-let UPLOAD_DIR = process.env.UPLOAD_DIR || '/home/u837896566/uploads';
-
-// Local Fallback: If Hostinger path is not accessible/creatable (e.g. on Mac), use local folder
-try {
-  // Check if we can write to the preferred path or if it exists
-  if (!fs.existsSync(UPLOAD_DIR)) {
-    // Try creating it (will fail if permissions/path parent missing on local)
-    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-  }
-  // Test write permission
-  fs.accessSync(UPLOAD_DIR, fs.constants.W_OK);
-} catch (error) {
-  console.warn(`⚠️ Cannot use persistent path ${UPLOAD_DIR} (Local Dev Environment?).`);
-  // Fallback to local 'uploads'
-  UPLOAD_DIR = path.join(__dirname, 'uploads');
-  console.log(`⚠️ Falling back to local directory: ${UPLOAD_DIR}`);
-}
-
-const DATA_DIR = process.env.PERSISTENT_STORAGE_PATH
-  ? path.resolve(process.env.PERSISTENT_STORAGE_PATH, 'data')
-  : path.resolve('data');
+// 1. Get Configured Paths (SSOT from storage.js)
+const UPLOAD_DIR = getUploadsPath();
+const DATA_DIR = getDataPath();
 
 console.log(`📂 Configuration:`);
 console.log(`   - Uploads: ${UPLOAD_DIR}`);
 console.log(`   - Data: ${DATA_DIR}`);
 
-// 2. Ensure Directories Exist (Safe Mode)
-try {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-  if (!fs.existsSync(UPLOAD_DIR)) {
-    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-    console.log('✅ Created upload directory');
-  }
-} catch (error) {
-  console.error('⚠️ Failed to create directories (permissions?):', error.message);
-  console.error('   Server will continue, but uploads might fail.');
-}
+// 2. Ensure Directories Exist
+ensureDirectories();
 
 // 3. Middleware & Serving
 app.use(cors());

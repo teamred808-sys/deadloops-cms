@@ -20,7 +20,7 @@ try {
   }
   fs.accessSync(UPLOADS_DIR, fs.constants.W_OK);
 } catch (error) {
-  UPLOADS_DIR = path.resolve('uploads'); // Fallback to root/uploads
+  UPLOADS_DIR = path.join(__dirname, 'uploads'); // Fallback to server/uploads
 }
 
 console.log(`📂 Storage Configuration:`);
