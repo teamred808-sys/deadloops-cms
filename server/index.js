@@ -148,14 +148,29 @@ const upload = multer({
 // ... (skipping unchanged code) ...
 
 // ============= FILE UPLOAD API =============
-app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => {
+// ============= FILE UPLOAD API =============
+const uploadMiddleware = upload.single('file');
+
+app.post('/api/upload', authenticateToken, (req, res, next) => {
+  uploadMiddleware(req, res, (err) => {
+    if (err) {
+      console.error('❌ Upload Error:', err);
+      // Handle Multer-specific errors
+      if (err instanceof multer.MulterError) {
+        return res.status(400).json({ error: `Upload error: ${err.message}` });
+      }
+      return res.status(500).json({ error: 'Internal server error during upload' });
+    }
+    next();
+  });
+}, (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
 
   // The file is already saved to the persistent path by Multer (configured via storage.js -> getUploadsPath)
   // We just return the URL relative to the domain (served via express.static)
-  console.log(`✅ File saved to: ${req.file.path}`);
+  console.log(`✅ File saved to: ${req.file.path} (Size: ${req.file.size} bytes)`);
 
   // User requested URL format: /uploads/filename
   const fileUrl = `/uploads/${req.file.filename}`;

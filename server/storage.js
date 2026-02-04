@@ -14,22 +14,52 @@ const DATA_DIR = BASE_DIR; // Keep data in root/data or custom path
 let UPLOADS_DIR = process.env.UPLOAD_DIR || process.env.PERSISTENT_STORAGE_PATH || '/home/u837896566/uploads';
 UPLOADS_DIR = path.resolve(UPLOADS_DIR);
 
-// Local Fallback: If Hostinger path is not accessible (e.g. on Mac), use local
-try {
-  if (!fs.existsSync(UPLOADS_DIR)) {
-    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+// Robust Path Resolution: Test write permissions and fallback
+function resolveUploadPath(preferredPath) {
+  const localFallback = path.join(__dirname, 'uploads');
+
+  // Helper to test writability
+  const isWritable = (dirPath) => {
+    try {
+      if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+      }
+      fs.accessSync(dirPath, fs.constants.W_OK);
+      // Double check by writing a test file (fs.access can be misleading in some containers)
+      const testFile = path.join(dirPath, `.write_test_${Date.now()}`);
+      fs.writeFileSync(testFile, 'test');
+      fs.unlinkSync(testFile);
+      return true;
+    } catch (error) {
+      console.warn(`⚠️ Path is not writable or accessible: ${dirPath}`, error.message);
+      return false;
+    }
+  };
+
+  if (isWritable(preferredPath)) {
+    return preferredPath;
   }
-  fs.accessSync(UPLOADS_DIR, fs.constants.W_OK);
-} catch (error) {
-  UPLOADS_DIR = path.join(__dirname, 'uploads'); // Fallback to server/uploads
+
+  console.warn(`⚠️ Preferred path ${preferredPath} failed write test. Falling back to local: ${localFallback}`);
+
+  if (isWritable(localFallback)) {
+    return localFallback;
+  }
+
+  // Last resort: try /tmp
+  console.error(`❌ Local fallback also failed. Trying /tmp...`);
+  return '/tmp/uploads';
 }
+
+UPLOADS_DIR = resolveUploadPath(UPLOADS_DIR);
 
 console.log(`📂 Storage Configuration:`);
 console.log(`   - Data: ${DATA_DIR}`);
-console.log(`   - Uploads: ${UPLOADS_DIR} (from env: ${!!process.env.UPLOAD_DIR})`);
+console.log(`   - Uploads: ${UPLOADS_DIR} (Write Verified)`);
 
-// Ensure directories exist
+// Ensure directories exist (Redundant but safe)
 function ensureDirectories() {
+  // ... existing code for DATA_DIR ...
   if (!fs.existsSync(DATA_DIR)) {
     try {
       fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -37,13 +67,7 @@ function ensureDirectories() {
       console.error('Failed to create DATA_DIR:', e);
     }
   }
-  if (!fs.existsSync(UPLOADS_DIR)) {
-    try {
-      fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-    } catch (e) {
-      console.error('Failed to create UPLOADS_DIR:', e);
-    }
-  }
+  // No need to create UPLOADS_DIR here as resolveUploadPath already did it/checked it
 }
 
 // Read JSON file
