@@ -32,8 +32,14 @@ import FooterPageDetail from "./pages/FooterPageDetail";
 import RootSlugPage from "./pages/RootSlugPage";
 import AdminLayout from "@/components/admin/AdminLayout";
 
-const queryClient = new QueryClient();
-
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+    },
+  },
+});
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   return (

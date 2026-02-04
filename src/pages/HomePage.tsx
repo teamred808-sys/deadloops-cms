@@ -6,6 +6,7 @@ import BlogFooter from '@/components/blog/BlogFooter';
 import BlogCard from '@/components/blog/BlogCard';
 import GoogleAd from '@/components/blog/GoogleAd';
 import PaginationNav from '@/components/blog/PaginationNav';
+import BlogSidebar from '@/components/blog/BlogSidebar';
 import SEOHead from '@/components/seo/SEOHead';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -25,7 +26,7 @@ export default function HomePage() {
 
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  
+
   // Deferred search for INP optimization
   const deferredSearch = useDeferredValue(search);
 
@@ -57,7 +58,7 @@ export default function HomePage() {
   }, [posts, deferredSearch, selectedCategory]);
 
   const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
-  
+
   // Redirect if page exceeds total (but only after loading is complete and we have posts)
   if (!loading && currentPage > totalPages && totalPages > 0 && !search && !selectedCategory) {
     return <Navigate to="/" replace />;
@@ -78,10 +79,10 @@ export default function HomePage() {
   };
 
   // SEO: Dynamic title and canonical
-  const pageTitle = currentPage === 1 
+  const pageTitle = currentPage === 1
     ? (settings?.siteTitle || 'Latest Music Production Articles')
     : `${settings?.siteTitle || 'Latest Music Production Articles'} - Page ${currentPage}`;
-  
+
   const canonical = currentPage === 1 ? '/' : `/page/${currentPage}`;
 
   if (loading) {
@@ -150,7 +151,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        
+
         {/* Search - Sticky on mobile */}
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm py-2 md:static md:py-0 mb-4 md:mb-8">
           <div className="max-w-md mx-auto relative">
@@ -171,8 +172,8 @@ export default function HomePage() {
               <div className="text-center py-12">
                 <p className="text-2xl mb-2">📭</p>
                 <p className="text-muted-foreground">
-                  {search || selectedCategory 
-                    ? 'No posts found matching your criteria' 
+                  {search || selectedCategory
+                    ? 'No posts found matching your criteria'
                     : 'No posts yet. Check back soon!'}
                 </p>
               </div>
@@ -184,19 +185,19 @@ export default function HomePage() {
                     <Fragment key={post.id}>
                       <BlogCard post={post} categories={categories} priority={index === 0 && currentPage === 1} />
                       {/* Insert in-feed ad after every 4 posts */}
-                      {settings?.googleAdsEnabled && 
-                       settings?.googleAdsInFeedSlotId && 
-                       (index + 1) % 4 === 0 && 
-                       index < paginatedPosts.length - 1 && (
-                        <div className="sm:col-span-2">
-                          <GoogleAd
-                            enabled={settings.googleAdsEnabled}
-                            clientId={settings.googleAdsClientId}
-                            slotId={settings.googleAdsInFeedSlotId}
-                            adType="in-feed"
-                          />
-                        </div>
-                      )}
+                      {settings?.googleAdsEnabled &&
+                        settings?.googleAdsInFeedSlotId &&
+                        (index + 1) % 4 === 0 &&
+                        index < paginatedPosts.length - 1 && (
+                          <div className="sm:col-span-2">
+                            <GoogleAd
+                              enabled={settings.googleAdsEnabled}
+                              clientId={settings.googleAdsClientId}
+                              slotId={settings.googleAdsInFeedSlotId}
+                              adType="in-feed"
+                            />
+                          </div>
+                        )}
                     </Fragment>
                   ))}
                 </div>
@@ -221,48 +222,16 @@ export default function HomePage() {
           </div>
 
           {/* Sidebar */}
-          <aside className="lg:col-span-1 content-visibility-auto">
-            <div className="sticky top-20 space-y-6">
-              {/* Categories - Desktop Only */}
-              <div className="hidden lg:block gradient-card border border-border/50 rounded-lg p-4">
-                <h3 className="font-semibold mb-4">Categories</h3>
-                <div className="flex flex-wrap gap-2">
-                  <Badge
-                    variant={selectedCategory === null ? 'default' : 'outline'}
-                    className="cursor-pointer"
-                    onClick={() => handleCategoryClick(null)}
-                  >
-                    All
-                  </Badge>
-                  {categories.map((category) => (
-                    <Badge
-                      key={category.id}
-                      variant={selectedCategory === category.id ? 'default' : 'outline'}
-                      className="cursor-pointer"
-                      onClick={() => handleCategoryClick(category.id)}
-                    >
-                      {category.name}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              {/* Stats */}
-              <div className="gradient-card border border-border/50 rounded-lg p-4">
-                <h3 className="font-semibold mb-4">Stats</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total Posts</span>
-                    <span className="font-medium">{posts.length}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Categories</span>
-                    <span className="font-medium">{categories.length}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </aside>
+          <BlogSidebar
+            categories={categories}
+            selectedCategory={selectedCategory}
+            onCategoryClick={handleCategoryClick}
+            stats={{
+              totalPosts: posts.length,
+              categoriesCount: categories.length
+            }}
+            className="lg:col-span-1"
+          />
         </div>
       </main>
 

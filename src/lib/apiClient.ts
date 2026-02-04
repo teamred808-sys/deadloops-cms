@@ -7,12 +7,12 @@ let serverChecked = false;
 
 export async function checkServerAvailability(): Promise<boolean> {
   if (serverChecked) return serverAvailable;
-  
+
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3000);
-    
-    const response = await fetch(`${API_BASE}/settings`, { 
+
+    const response = await fetch(`${API_BASE}/settings`, {
       method: 'GET',
       signal: controller.signal
     });
@@ -35,11 +35,11 @@ let authToken: string | null = null;
 
 export function setAuthToken(token: string | null, rememberMe: boolean = true): void {
   authToken = token;
-  
+
   // Clear from both storages first
   localStorage.removeItem('auth_token');
   sessionStorage.removeItem('auth_token');
-  
+
   if (token) {
     if (rememberMe) {
       localStorage.setItem('auth_token', token);
@@ -69,26 +69,26 @@ async function fetchApi<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const token = getAuthToken();
-  
+
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...options.headers,
   };
-  
+
   if (token) {
     (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
   }
-  
+
   const response = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
     headers,
   });
-  
+
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Request failed' }));
     throw new Error(error.error || `HTTP ${response.status}`);
   }
-  
+
   return response.json();
 }
 
@@ -125,18 +125,18 @@ export async function uploadFile(file: File): Promise<{ url: string; filename: s
   const token = getAuthToken();
   const formData = new FormData();
   formData.append('file', file);
-  
+
   const response = await fetch(`${API_BASE}/upload`, {
     method: 'POST',
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
   });
-  
+
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Upload failed' }));
     throw new Error(error.error || 'Upload failed');
   }
-  
+
   return response.json();
 }
 
@@ -149,20 +149,20 @@ export async function uploadMedia(
   const token = getAuthToken();
   const formData = new FormData();
   formData.append('file', file);
-  if (width) formData.append('width', width.toString());
-  if (height) formData.append('height', height.toString());
-  
-  const response = await fetch(`${API_BASE}/media`, {
+  // Backend doesn't strictly use width/height in upload, but we can keep them if needed later.
+  // CRITICAL FIX: Endpoint must be /upload, not /media
+
+  const response = await fetch(`${API_BASE}/upload`, {
     method: 'POST',
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
   });
-  
+
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Upload failed' }));
     throw new Error(error.error || 'Upload failed');
   }
-  
+
   return response.json();
 }
 
