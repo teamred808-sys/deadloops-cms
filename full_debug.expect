@@ -1,0 +1,47 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+set user "u837896566"
+set host "88.222.247.233"
+set port "65002"
+set password "Akkiboy@#1"
+
+spawn ssh -p $port -o StrictHostKeyChecking=no -o ConnectTimeout=60 $user@$host
+
+expect {
+    "password:" {
+        send "$password\r"
+    }
+    timeout { exit 1 }
+}
+
+expect "$ "
+send "cd domains/deadloops.com/public_html\r"
+expect "$ "
+
+puts "\n--- Checking Git Status ---"
+send "git status\r"
+expect "$ "
+
+puts "\n--- Checking Current Commit ---"
+send "git log -1\r"
+expect "$ "
+
+puts "\n--- Checking Remotes ---"
+send "git remote -v\r"
+expect "$ "
+
+puts "\n--- Checking Error Logs ---"
+send "tail -n 50 stderr.log\r"
+expect "$ "
+
+puts "\n--- Checking Fallback Uploads Directory ---"
+send "ls -la server/uploads\r"
+expect "$ "
+
+puts "\n--- Checking /tmp/uploads (Last Resort) ---"
+send "ls -la /tmp/uploads\r"
+expect "$ "
+
+send "exit\r"
+expect eof

@@ -30,6 +30,9 @@ expect "$ "
 send "git pull\r"
 
 expect "$ "
+send "touch tmp/restart.txt\r"
+
+expect "$ "
 send "exit\r"
 
 expect eof

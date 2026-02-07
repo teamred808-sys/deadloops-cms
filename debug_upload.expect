@@ -1,0 +1,46 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+set user "u837896566"
+set host "88.222.247.233"
+set port "65002"
+set password "Akkiboy@#1"
+
+spawn ssh -p $port -o ConnectTimeout=60 $user@$host
+
+expect {
+    "password:" {
+        send "$password\r"
+    }
+    timeout { exit 1 }
+}
+
+expect "$ "
+# Check Home directory uploads folder
+send "ls -ld ~/uploads\r"
+expect "$ "
+
+# Check permissions
+send "touch ~/uploads/test_write.txt\r"
+expect "$ "
+send "ls -la ~/uploads/test_write.txt\r"
+expect "$ "
+send "rm ~/uploads/test_write.txt\r"
+expect "$ "
+
+# Check app directory logs
+send "cd domains/deadloops.com/public_html\r"
+expect "$ "
+send "tail -n 50 stderr.log\r"
+expect "$ "
+
+# Check if server/uploads exists (fallback)
+send "ls -ld server/uploads\r"
+expect "$ "
+
+# Check disk usage
+send "df -h ~\r"
+
+expect "$ "
+send "exit\r"
+expect eof

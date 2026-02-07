@@ -1,0 +1,40 @@
+#!/usr/bin/expect -f
+
+set timeout 120
+set user "u837896566"
+set host "88.222.247.233"
+set port "65002"
+set password "Akkiboy@#1"
+
+spawn ssh -p $port -o StrictHostKeyChecking=no -o ConnectTimeout=60 $user@$host
+
+expect {
+    "password:" {
+        send "$password\r"
+    }
+    timeout { exit 1 }
+}
+
+expect "$ "
+send "cd domains/deadloops.com/public_html\r"
+expect "$ "
+
+puts "\n--- Resetting Git State ---"
+# Force discard all local changes
+send "git reset --hard\r"
+expect "$ "
+
+puts "\n--- Pulling Latest Changes ---"
+send "git pull\r"
+expect "$ "
+
+puts "\n--- Restarting App ---"
+send "touch tmp/restart.txt\r"
+expect "$ "
+
+puts "\n--- Verifying Commit ---"
+send "git log -1 --format=%H\r"
+expect "$ "
+
+send "exit\r"
+expect eof
