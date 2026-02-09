@@ -27,3 +27,6 @@ uploads/
 
 # Dev entry point
 index.html
+
+.env
+server/subscribers.json

@@ -2,6 +2,7 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
+const webpush = require('web-push');
 const multer = require('multer');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
@@ -1698,6 +1699,89 @@ async function servePostWithTags(req, res, next) {
     next();
   }
 }
+
+// ============= WEB PUSH NOTIFICATIONS =============
+const publicVapidKey = process.env.VAPID_PUBLIC_KEY;
+const privateVapidKey = process.env.VAPID_PRIVATE_KEY;
+const vapidEmail = process.env.VAPID_EMAIL || 'mailto:test@test.com';
+
+if (publicVapidKey && privateVapidKey) {
+  webpush.setVapidDetails(vapidEmail, publicVapidKey, privateVapidKey);
+  console.log('✅ Web Push Configured');
+} else {
+  console.warn('⚠️ Web Push VAPID keys missing');
+}
+
+// Store subscription in JSON file for simplicity as requested
+const SUBSCRIBERS_FILE = path.join(__dirname, 'subscribers.json');
+
+// Helper to read subscribers
+function getSubscribers() {
+  if (!fs.existsSync(SUBSCRIBERS_FILE)) return [];
+  try {
+    return JSON.parse(fs.readFileSync(SUBSCRIBERS_FILE, 'utf8'));
+  } catch (e) {
+    return [];
+  }
+}
+
+// Helper to save subscribers
+function saveSubscribers(subs) {
+  fs.writeFileSync(SUBSCRIBERS_FILE, JSON.stringify(subs, null, 2));
+}
+
+app.get('/api/vapid-public-key', (req, res) => {
+  res.json({ publicKey: publicVapidKey });
+});
+
+app.post('/api/subscribe', (req, res) => {
+  const subscription = req.body;
+  if (!subscription || !subscription.endpoint) {
+    return res.status(400).json({ error: 'Invalid subscription object' });
+  }
+
+  const subs = getSubscribers();
+  // Check functionality
+  const exists = subs.find(s => s.endpoint === subscription.endpoint);
+  if (!exists) {
+    subs.push(subscription);
+    saveSubscribers(subs);
+    console.log('New subscriber added:', subscription.endpoint);
+  }
+  res.status(201).json({ message: 'Subscribed!' });
+});
+
+app.post('/api/send-notification', authenticateToken, async (req, res) => {
+  const { title, body, url, icon } = req.body;
+  const payload = JSON.stringify({ title, body, url, icon });
+
+  const subs = getSubscribers();
+  if (subs.length === 0) return res.json({ message: 'No subscribers to notify' });
+
+  console.log(`Sending notification to ${subs.length} subscribers...`);
+
+  const promises = subs.map(sub =>
+    webpush.sendNotification(sub, payload).catch(error => {
+      console.error('Error sending notification, removing subscriber', error);
+      if (error.statusCode === 410 || error.statusCode === 404) {
+        return { action: 'delete', endpoint: sub.endpoint };
+      }
+      return { action: 'keep', endpoint: sub.endpoint }; // Keep even on error unless gone
+    })
+  );
+
+  const results = await Promise.all(promises);
+
+  // Cleanup invalid subscriptions
+  const toDelete = results.filter(r => r && r.action === 'delete').map(r => r.endpoint);
+  if (toDelete.length > 0) {
+    const validSubs = subs.filter(s => !toDelete.includes(s.endpoint));
+    saveSubscribers(validSubs);
+    console.log(`Removed ${toDelete.length} invalid subscriptions.`);
+  }
+
+  res.json({ success: true, sentCount: subs.length - toDelete.length });
+});
 
 // 4. Redirect /blog/:slug to /:slug (Legacy Support)
 app.get('/blog/:slug', (req, res) => {
