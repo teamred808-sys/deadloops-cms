@@ -1,0 +1,24 @@
+#!/usr/bin/expect -f
+
+set timeout 20
+set host "88.222.247.233"
+set port "65002"
+set user "u837896566"
+set password "Akkiboy@#1"
+set command [lindex $argv 0]
+
+if {$command eq ""} {
+    set command "uname -a && echo '---' && ps aux | grep mysql"
+}
+
+spawn ssh -p $port $user@$host $command
+expect {
+    "yes/no" {
+        send "yes\r"
+        exp_continue
+    }
+    "password:" {
+        send "$password\r"
+    }
+}
+expect eof
