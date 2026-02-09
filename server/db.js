@@ -1,11 +1,14 @@
 const mysql = require('mysql2');
 const dotenv = require('dotenv');
+const path = require('path');
 
-// Load env vars from the root or server directory
-dotenv.config();
+// Load env vars from the server directory (where this file lives)
+// This handles Hostinger's lsnode which runs with a different CWD
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 console.log('DEBUG: DB_HOST from env:', process.env.DB_HOST);
-console.log('DEBUG: Loaded .env from:', process.cwd());
+console.log('DEBUG: __dirname:', __dirname);
+console.log('DEBUG: Loaded .env from:', path.join(__dirname, '.env'));
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
