@@ -4,6 +4,9 @@ const dotenv = require('dotenv');
 // Load env vars from the root or server directory
 dotenv.config();
 
+console.log('DEBUG: DB_HOST from env:', process.env.DB_HOST);
+console.log('DEBUG: Loaded .env from:', process.cwd());
+
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER,

@@ -1,0 +1,40 @@
+#!/usr/bin/expect -f
+
+# SSH Tunnel Script for Remote MySQL Access
+# Forwards local port 3306 to remote port 3306
+
+set timeout -1
+log_file tunnel.log
+set user "u837896566"
+set host "88.222.247.233"
+set port "65002"
+set password "Akkiboy@#1"
+
+puts "🔌 Establishing SSH Tunnel to $host..."
+puts "   Local: 3306 -> Remote: 3306"
+
+# -L 3306:127.0.0.1:3306 means:
+# Listen on local 3306, forward to 127.0.0.1:3306 relative to the remote server.
+# This works because the MySQL server is localhost on the remote Hostinger server.
+spawn ssh -v -L 3306:127.0.0.1:3306 -p $port -N $user@$host
+
+expect {
+    "password:" {
+        send "$password\r"
+        puts "\n🔑 Password sent. Tunnel should be active."
+        puts "🛑 Press Ctrl+C to stop the tunnel."
+        # Keep expectation alive to keep tunnel open
+        expect eof
+    }
+    "(yes/no" {
+        send "yes\r"
+        expect "password:"
+        send "$password\r"
+        puts "\n🔑 Password sent (after fingerprint). Tunnel active."
+        expect eof
+    }
+    timeout {
+        puts "❌ Connection timed out."
+        exit 1
+    }
+}
