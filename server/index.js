@@ -487,7 +487,8 @@ app.get('/api/posts/published', async (req, res) => {
     `);
     res.json(posts.map(parsePostData));
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch published posts' });
+    console.error('Error fetching published posts:', error);
+    res.status(500).json({ error: 'Failed to fetch published posts', details: error.message });
   }
 });
 
@@ -803,7 +804,8 @@ app.get('/api/footer-pages/published', async (req, res) => {
     const [pages] = await pool.query('SELECT id, title, slug, content, sort_order as sortOrder, status, created_at as createdAt, updated_at as updatedAt FROM footer_pages WHERE status = "published" ORDER BY sort_order ASC');
     res.json(pages);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch published footer pages' });
+    console.error('Error fetching published footer pages:', error);
+    res.status(500).json({ error: 'Failed to fetch published footer pages', details: error.message });
   }
 });
 
@@ -912,10 +914,11 @@ app.delete('/api/footer-pages/:id', authenticateToken, async (req, res) => {
 // ============= CATEGORIES API =============
 app.get('/api/categories', async (req, res) => {
   try {
-    const [categories] = await pool.query('SELECT id, name, slug, created_at as createdAt FROM categories');
+    const [categories] = await pool.query('SELECT * FROM categories ORDER BY name ASC');
     res.json(categories);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch categories' });
+    console.error('Error fetching categories:', error);
+    res.status(500).json({ error: 'Failed to fetch categories', details: error.message });
   }
 });
 
@@ -996,10 +999,11 @@ app.get('/api/categories/:id/post-count', async (req, res) => {
 // ============= TAGS API =============
 app.get('/api/tags', async (req, res) => {
   try {
-    const [tags] = await pool.query('SELECT id, name, slug, created_at as createdAt FROM tags');
+    const [tags] = await pool.query('SELECT * FROM tags ORDER BY name ASC');
     res.json(tags);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch tags' });
+    console.error('Error fetching tags:', error);
+    res.status(500).json({ error: 'Failed to fetch tags', details: error.message });
   }
 });
 
@@ -1119,7 +1123,12 @@ app.get('/api/settings', async (req, res) => {
     };
     res.json(settings);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch settings' });
+    console.error('Error fetching settings:', error);
+    res.status(500).json({
+      error: 'Failed to fetch settings',
+      details: error.message,
+      usingDefaults: true
+    });
   }
 });
 
@@ -1912,21 +1921,32 @@ app.get('*', (req, res) => {
 
 // Initialize and start server with error handling
 async function start() {
-  try {
-    await initializeDefaultUser();
-    await initializeSettings();
-    await ensureSchemaUpdates();
-    await initializeDefaultAuthor();
+  console.log('🏁 Starting initialization sequence...');
 
-    app.listen(PORT, () => {
-      console.log(`✅ Server listening on 0.0.0.0:${PORT}`);
-      console.log(`📁 Data directory: ${path.resolve(__dirname, 'data')}`);
-      console.log(`📸 Uploads directory: ${getUploadsPath()}`);
-    });
-  } catch (error) {
-    console.error('❌ Server failed to start:', error);
-    process.exit(1);
+  // Try each step independently so the server can at least start
+  const steps = [
+    { name: 'Default User', fn: initializeDefaultUser },
+    { name: 'Settings', fn: initializeSettings },
+    { name: 'Schema Updates', fn: ensureSchemaUpdates },
+    { name: 'Default Author', fn: initializeDefaultAuthor }
+  ];
+
+  for (const step of steps) {
+    try {
+      console.log(`⏳ Running ${step.name} initialization...`);
+      await step.fn();
+      console.log(`✅ ${step.name} initialization complete.`);
+    } catch (error) {
+      console.error(`⚠️ ${step.name} initialization failed:`, error.message);
+      // We don't exit here, allowing the server to start and provide diagnostics
+    }
   }
+
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ Server listening on 0.0.0.0:${PORT}`);
+    console.log(`📁 Data directory: ${DATA_DIR}`);
+    console.log(`📸 Uploads directory: ${UPLOAD_DIR}`);
+  });
 }
 
 start();
