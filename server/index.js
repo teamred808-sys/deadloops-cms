@@ -69,7 +69,19 @@ app.use(express.json({ limit: '50mb' }));
 
 // 4. Security Middleware
 app.use(helmet({
-  contentSecurityPolicy: false, // Disable CSP to avoid blocking inline scripts/ads
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://pagead2.googlesyndication.com", "https://partner.googleadservices.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      imgSrc: ["'self'", "data:", "blob:", "https://pagead2.googlesyndication.com"],
+      connectSrc: ["'self'", "https://pagead2.googlesyndication.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      frameSrc: ["'self'", "https://googleads.g.doubleclick.net", "https://pagead2.googlesyndication.com"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: [],
+    },
+  },
   crossOriginEmbedderPolicy: false, // Allow embedding (ads, iframes)
 }));
 
