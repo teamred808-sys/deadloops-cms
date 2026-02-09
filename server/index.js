@@ -70,15 +70,39 @@ app.use(express.json({ limit: '50mb' }));
 // 4. Security Middleware
 app.use(helmet({
   contentSecurityPolicy: {
-    reportOnly: true,
+    reportOnly: false,
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://pagead2.googlesyndication.com", "https://partner.googleadservices.com"],
+      scriptSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "'unsafe-eval'",
+        "https://pagead2.googlesyndication.com",
+        "https://partner.googleadservices.com",
+        "https://www.googletagservices.com",
+        "https://www.googletagmanager.com",
+        "https://adservice.google.com",
+        "https://tpc.googlesyndication.com",
+        "https://www.google-analytics.com",
+        "https://ep1.adtrafficquality.google",
+        "https://ep2.adtrafficquality.google"
+      ],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      imgSrc: ["'self'", "data:", "blob:", "https://pagead2.googlesyndication.com"],
-      connectSrc: ["'self'", "https://pagead2.googlesyndication.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      frameSrc: ["'self'", "https://googleads.g.doubleclick.net", "https://pagead2.googlesyndication.com"],
+      imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
+      connectSrc: [
+        "'self'",
+        "https://pagead2.googlesyndication.com",
+        "https://www.google-analytics.com",
+        "https://adservice.google.com"
+      ],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+      frameSrc: [
+        "'self'",
+        "https://googleads.g.doubleclick.net",
+        "https://pagead2.googlesyndication.com",
+        "https://tpc.googlesyndication.com",
+        "https://www.google.com"
+      ],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: [],
     },
