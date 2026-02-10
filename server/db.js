@@ -60,7 +60,4 @@ async function testConnection() {
     }
 }
 
-module.exports = {
-    pool: promisePool,
-    testConnection,
-};
+module.exports.pool = promisePool;
