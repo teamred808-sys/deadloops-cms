@@ -10,6 +10,7 @@ console.log('DEBUG: DB_HOST from env:', process.env.DB_HOST);
 console.log('DEBUG: __dirname:', __dirname);
 console.log('DEBUG: Loaded .env from:', path.join(__dirname, '.env'));
 
+// Create the connection pool
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER,
@@ -22,10 +23,30 @@ const pool = mysql.createPool({
     // Keep connection alive
     enableKeepAlive: true,
     keepAliveInitialDelay: 0,
+    // namedPlaceholders: true // careful with this if existing queries use ?
 });
 
 // Convert pool to promise-based for easier async/await usage
 const promisePool = pool.promise();
+
+// Heartbeat function to keep connections alive
+const HEARTBEAT_INTERVAL = 5 * 60 * 1000; // 5 minutes
+
+function startHeartbeat() {
+    setInterval(async () => {
+        try {
+            await promisePool.query('SELECT 1');
+            // console.log('💓 Database heartbeat: OK'); // Uncomment for debugging
+        } catch (error) {
+            console.error('❌ Database heartbeat failed:', error.message);
+            // Optional: exit process if DB is consistently down?
+            // process.exit(1);
+        }
+    }, HEARTBEAT_INTERVAL);
+}
+
+// Start the heartbeat
+startHeartbeat();
 
 // Test connection function
 async function testConnection() {
